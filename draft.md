@@ -1,1 +1,3 @@
-![Screenshot](https://github.com/avabirtwistle/CSC446_finalproj/commit/5b29fe4ad089d16fa7c9d39563c917ccd2cd39e4)
+<p align="center">
+<img src="https://github.com/avabirtwistle/CSC446_finalproj/blob/main/Screenshot%202025-11-24%20at%2009.51.09.png" width="300">
+</p>
