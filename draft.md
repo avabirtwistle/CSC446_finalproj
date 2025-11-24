@@ -1,3 +1,4 @@
+# Routing Policies
 ## Shortest Estimated Time
 The Shortest Estimated Time routing policy selects a charging location by minimizing the total expected time for the vehicle. This total time includes both the travel time from the vehicle’s current position and the expected waiting time in each station’s queue.
 ### Algorithm Description
