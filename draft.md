@@ -22,7 +22,7 @@ The Shortest Estimated Time routing policy selects a charging location by minimi
  - The process ends once the vehicle joins a queue or all possible stations are exhausted.
 
 ## Shortest Distance
-The Shortest Distance routing policy selects a charging location by choosing the station that is geographically closest to the vehicle’s current \((x,y)\) position, after removing any stations the vehicle cannot reach with its remaining battery.
+The Shortest Distance routing policy selects a charging location by choosing the station that is geographically closest to the vehicle’s current (x,y) position, after removing any stations the vehicle cannot reach with its remaining battery.
 
 ### Algorithm Description
 1. **Compute Battery Consumption to Reach All Stations**
