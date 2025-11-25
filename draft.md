@@ -1,3 +1,8 @@
+# Equations
+### Time required for vehicle to reach charged state:
+$$\Delta t  = \frac{(SoC_{out} - SoC_{in})C_B}{P_C}$$
+
+
 # Routing Policies
 ## Shortest Estimated Time
 The Shortest Estimated Time routing policy selects a charging location by minimizing the total expected time for the vehicle. This total time includes both the travel time from the vehicle’s current position and the expected waiting time in each station’s queue.
