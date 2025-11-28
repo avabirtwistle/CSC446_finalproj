@@ -1,10 +1,10 @@
 import numpy as np
 
 class Car:
-    def __init__(self):
+    def __init__(self, arrival_time=0.0):
         self.position = self.get_position()
         self.battery_level = self.get_battery_level()
-        self.arrival_time = 0.0
+        self.arrival_time = arrival_time
 
     def get_position(self):
         X_MIN = 48.42242
