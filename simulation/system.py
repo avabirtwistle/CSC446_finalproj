@@ -54,19 +54,24 @@ class EV_Charging_System:
             self.sim_time + self.expon(self.mean_interarrival_time)
         )
 
-        car = Car(self.sim_time)
+        car = Car()
+        car.arrival_time = self.sim_time
 
         # TEMP routing policy pass car into actual one
-        station_choice = np.random.randint(0, 3)
+        station_choice = np.random.randint(1,4)
         station_event = [
             EventType.ARRIVAL_STATION_1,
             EventType.ARRIVAL_STATION_2,
             EventType.ARRIVAL_STATION_3,
         ][station_choice]
 
+        car.station_routed_to = station_choice
+        drive_time = self.expon(2.0) #for actual drive time calculation
+
         self.time_next_event[station_event] = (
-            self.sim_time + self.expon(2.0)  # change to drive time
+            self.sim_time + drive_time
         )
+
     def expon(self, mean):
         return -mean * np.log(np.random.uniform(0, 1))
 

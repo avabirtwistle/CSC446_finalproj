@@ -16,7 +16,7 @@ class Charging_Station:
         self.mean_slow_service = 20.0  
 
 
-        # Map departures to event types
+        # Map departures and arrivals to event types
         self.depart_fast_event = {
             1: EventType.DEPARTURE_STATION_1_FAST,
             2: EventType.DEPARTURE_STATION_2_FAST,
@@ -50,12 +50,14 @@ class Charging_Station:
         self.time_next_event[self.arrival_event] = float('inf')
 
     def departure_fast(self):
-        self.fast_charger_status = 0
 
-        if self.num_in_queue > 0:
+        if self.num_in_queue == 0:
+            self.fast_charger_status = 0
+            self.time_next_event[self.depart_fast_event] = float('inf')
+
+        else:
             # Take next car from queue
             self.num_in_queue -= 1
-            self.fast_charger_status = 1
             self.time_next_event[self.depart_fast_event] = self.sim_time() + self.expon(self.mean_fast_service)
 
     def departure_slow(self):
