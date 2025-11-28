@@ -10,7 +10,7 @@ class EV_Charging_System:
         self.num_delays_required = num_delays_required
         self.num_cars_processed = 0
 
-        self.mean_interarrival_time = 5.0
+        self.mean_interarrival_time = 0.3
 
         self.sim_time = 0.0
 
@@ -105,5 +105,5 @@ class EV_Charging_System:
                     self.num_cars_processed += 1
 
 if __name__ == "__main__":
-    simulation = EV_Charging_System("shortest_estimated_time", 10)
+    simulation = EV_Charging_System("shortest_estimated_time", 10000)
     simulation.main()

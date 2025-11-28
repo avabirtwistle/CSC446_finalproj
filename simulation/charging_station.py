@@ -12,6 +12,9 @@ class Charging_Station:
         self.num_in_queue = 0
         self.fast_charger_status = 0  # 0 idle, 1 busy
         self.slow_charger_status = 0
+        self.mean_fast_service = 10.0  
+        self.mean_slow_service = 20.0  
+
 
         # Map departures to event types
         self.depart_fast_event = {
@@ -36,14 +39,13 @@ class Charging_Station:
         if self.fast_charger_status and self.slow_charger_status:
             # Both busy → join queue
             self.num_in_queue += 1
-            return
 
-        if not self.fast_charger_status:
+        elif not self.fast_charger_status:
             self.fast_charger_status = 1
-            self.time_next_event[self.depart_fast_event] = self.sim_time() + self.expon(10.0)
+            self.time_next_event[self.depart_fast_event] = self.sim_time() + self.expon(self.mean_fast_service)
         else:
             self.slow_charger_status = 1
-            self.time_next_event[self.depart_slow_event] = self.sim_time() + self.expon(20.0)
+            self.time_next_event[self.depart_slow_event] = self.sim_time() + self.expon(self.mean_slow_service)
         
         self.time_next_event[self.arrival_event] = float('inf')
 
@@ -54,7 +56,7 @@ class Charging_Station:
             # Take next car from queue
             self.num_in_queue -= 1
             self.fast_charger_status = 1
-            self.time_next_event[self.depart_fast_event] = self.sim_time() + self.expon(10.0)
+            self.time_next_event[self.depart_fast_event] = self.sim_time() + self.expon(self.mean_fast_service)
 
     def departure_slow(self):
         self.slow_charger_status = 0
@@ -62,7 +64,7 @@ class Charging_Station:
         if self.num_in_queue > 0:
             self.num_in_queue -= 1
             self.slow_charger_status = 1
-            self.time_next_event[self.depart_slow_event] = self.sim_time() + self.expon(20.0)
+            self.time_next_event[self.depart_slow_event] = self.sim_time() + self.expon(self.mean_slow_service)
 
     def expon(self, mean):
         """Generate exponential random variate."""
