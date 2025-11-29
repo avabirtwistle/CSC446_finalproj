@@ -1,22 +1,29 @@
-# charging_station.py
+import heapq
 import numpy as np
 from event import EventType
 
 class Charging_Station:
-    def __init__(self, station_id, position, time_next_event, sim_time):
+    def __init__(self, station_id, position, sim_time):
+
         self.station_id = station_id
         self.position = position
-        self.time_next_event = time_next_event
-        self.sim_time = sim_time           
+        self.sim_time = sim_time   # lambda returning current sim time
 
-        self.num_in_queue = 0
-        self.fast_charger_status = 0  # 0 idle, 1 busy
+        self.fast_charger_status = 0
         self.slow_charger_status = 0
-        self.mean_fast_service = 10.0  
-        self.mean_slow_service = 20.0  
 
+        self.queue = []   # Store Cars
 
-        # Map departures and arrivals to event types
+        self.mean_fast_service = 10.0
+        self.mean_slow_service = 20.0
+
+        # event type mapping
+        self.arrival_event = {
+            1: EventType.ARRIVAL_STATION_1,
+            2: EventType.ARRIVAL_STATION_2,
+            3: EventType.ARRIVAL_STATION_3
+        }[station_id]
+
         self.depart_fast_event = {
             1: EventType.DEPARTURE_STATION_1_FAST,
             2: EventType.DEPARTURE_STATION_2_FAST,
@@ -29,45 +36,77 @@ class Charging_Station:
             3: EventType.DEPARTURE_STATION_3_SLOW
         }[station_id]
 
-        self.arrival_event = {
-            1: EventType.ARRIVAL_STATION_1,
-            2: EventType.ARRIVAL_STATION_2,
-            3: EventType.ARRIVAL_STATION_3
-        }[station_id]
+    # car is passed in from system ( so lowest time in event queue)
+    def arrival(self, car, event_queue):
 
-    def arrival(self):
-        if self.fast_charger_status and self.slow_charger_status:
-            # Both busy → join queue
-            self.num_in_queue += 1
+        # if both chargers busy - join queue
+        if self.fast_charger_status == 1 and self.slow_charger_status == 1:
+            car.queue_entry_time = self.sim_time()
+            self.queue.append(car)
+            return
 
-        elif not self.fast_charger_status:
+        # is teh fast charger free?
+        if self.fast_charger_status == 0:
             self.fast_charger_status = 1
-            self.time_next_event[self.depart_fast_event] = self.sim_time() + self.expon(self.mean_fast_service)
-        else:
+
+            service_time = self.expon(self.mean_fast_service)
+            depart_time = self.sim_time() + service_time
+
+            #schedule departure event
+            heapq.heappush(event_queue,
+                (depart_time, self.depart_fast_event, car))
+
+            return
+
+        # is the slow charger free?
+        if self.slow_charger_status == 0:
             self.slow_charger_status = 1
-            self.time_next_event[self.depart_slow_event] = self.sim_time() + self.expon(self.mean_slow_service)
-        
-        self.time_next_event[self.arrival_event] = float('inf')
+            self.slow_car = car
 
-    def departure_fast(self):
+            service_time = self.expon(self.mean_slow_service)
+            depart_time = self.sim_time() + service_time
 
-        if self.num_in_queue == 0:
+            heapq.heappush(event_queue,
+                (depart_time, self.depart_slow_event, car))
+
+            return
+
+
+    # the next event was a departure from the fast charger
+    def departure_fast(self, event_queue):
+
+        # queue empty?
+        if len(self.queue) == 0:
             self.fast_charger_status = 0
-            self.time_next_event[self.depart_fast_event] = float('inf')
+            return
 
-        else:
-            # Take next car from queue
-            self.num_in_queue -= 1
-            self.time_next_event[self.depart_fast_event] = self.sim_time() + self.expon(self.mean_fast_service)
+        # take next car from queue
+        next_car = self.queue.pop(0)
+        self.fast_charger_status = 1
 
-    def departure_slow(self):
-        self.slow_charger_status = 0
+        service_time = self.expon(self.mean_fast_service)
+        depart_time = self.sim_time() + service_time
 
-        if self.num_in_queue > 0:
-            self.num_in_queue -= 1
-            self.slow_charger_status = 1
-            self.time_next_event[self.depart_slow_event] = self.sim_time() + self.expon(self.mean_slow_service)
+        heapq.heappush(event_queue,
+            (depart_time, self.depart_fast_event, next_car))
+
+
+    # slow charger
+    def departure_slow(self, event_queue):
+
+        if len(self.queue) == 0:
+            self.slow_charger_status = 0
+            return
+
+        next_car = self.queue.pop(0)
+        self.slow_charger_status = 1
+
+        service_time = self.expon(self.mean_slow_service)
+        depart_time = self.sim_time() + service_time
+
+        heapq.heappush(event_queue,
+            (depart_time, self.depart_slow_event, next_car))
+
 
     def expon(self, mean):
-        """Generate exponential random variate."""
-        return -mean * np.log(np.random.uniform(0, 1))
+        return -mean * np.log(np.random.uniform())
