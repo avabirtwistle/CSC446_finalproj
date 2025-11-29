@@ -11,6 +11,8 @@ class EV_Charging_System:
         self.routing_policy = routing_policy
         self.num_delays_required = num_delays_required
         self.num_cars_processed = 0
+        self.total_time_in_system = 0.0
+        self.total_wait_time = 0.0
 
         self.mean_interarrival_time = 0.3
         self.sim_time = 0.0
@@ -71,6 +73,39 @@ class EV_Charging_System:
 
     def expon(self, mean):
         return -mean * np.log(np.random.uniform())
+    
+    def record_departure(self, car):
+        time_in_system = self.sim_time - car.system_arrival_time
+        self.total_time_in_system += time_in_system
+
+        if car.queue_entry_time == 0.0:
+            wait_time = car.drive_time
+
+        else:
+            time_in_queue = self.sim_time - car.queue_entry_time
+            wait_time = car.drive_time + time_in_queue
+
+        self.total_wait_time += wait_time
+        self.num_cars_processed += 1
+
+    def print_results(self):
+        """Prints the final simulation results."""
+        if self.num_cars_processed > 0:
+            avg_time_in_system = self.total_time_in_system / self.num_cars_processed
+            avg_wait_time = self.total_wait_time / self.num_cars_processed
+        else:
+            avg_time_in_system = 0.0
+            avg_wait_time = 0.0
+
+        print("\n" + "="*50)
+        print("Simulation Results")
+        print(f"Total Cars Processed: {self.num_cars_processed}")
+        print(f"Total Time in System: {self.total_time_in_system:.2f} hrs")
+        print(f"Total Wait Time (incl. drive): {self.total_wait_time:.2f} hrs")
+        print("-" * 50)
+        print(f"Average Time in System: {avg_time_in_system:.2f} hrs")
+        print(f"Average Wait Time (incl. drive): {avg_wait_time:.2f} hrs")
+        print("="*50)
 
     def main(self):
         while self.num_cars_processed < self.num_delays_required:
@@ -93,27 +128,29 @@ class EV_Charging_System:
 
                 case EventType.DEPARTURE_STATION_1_FAST:
                     self.stations[0].departure_fast(self.event_queue)
-                    self.num_cars_processed += 1
+                    self.record_departure(self.event_car)
 
                 case EventType.DEPARTURE_STATION_1_SLOW:
                     self.stations[0].departure_slow(self.event_queue)
-                    self.num_cars_processed += 1
+                    self.record_departure(self.event_car)
 
                 case EventType.DEPARTURE_STATION_2_FAST:
                     self.stations[1].departure_fast(self.event_queue)
-                    self.num_cars_processed += 1
+                    self.record_departure(self.event_car)
 
                 case EventType.DEPARTURE_STATION_2_SLOW:
                     self.stations[1].departure_slow(self.event_queue)
-                    self.num_cars_processed += 1
+                    self.record_departure(self.event_car)
 
                 case EventType.DEPARTURE_STATION_3_FAST:
                     self.stations[2].departure_fast(self.event_queue)
-                    self.num_cars_processed += 1
+                    self.record_departure(self.event_car)
 
                 case EventType.DEPARTURE_STATION_3_SLOW:
                     self.stations[2].departure_slow(self.event_queue)
-                    self.num_cars_processed += 1
+                    self.record_departure(self.event_car)
+
+        self.print_results()
 
 if __name__ == "__main__":
     sim = EV_Charging_System("shortest_estimated_time", 5)
