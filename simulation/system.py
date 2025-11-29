@@ -1,4 +1,3 @@
-# ev_charging_system.py
 import heapq
 import numpy as np
 from event import EventType
