@@ -14,8 +14,8 @@ class Charging_Station:
 
         self.queue = []   # Store Cars
 
-        self.mean_fast_service = 10.0
-        self.mean_slow_service = 20.0
+        self.mean_fast_service = 0.5
+        self.mean_slow_service = 1.0
 
         # event type mapping
         self.arrival_event = {

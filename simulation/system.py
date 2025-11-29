@@ -62,7 +62,7 @@ class EV_Charging_System:
         ][station_choice - 1]
 
         # compute drive time (TEMP: random)
-        drive_time = self.expon(2.0)
+        drive_time = self.expon(0.5)
         car.drive_time = drive_time
         car.station_routed_to = station_choice
         car.station_arrival_time = self.sim_time + drive_time
@@ -153,5 +153,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System("shortest_estimated_time", 5)
+    sim = EV_Charging_System("shortest_estimated_time", 100000)
     sim.main()
