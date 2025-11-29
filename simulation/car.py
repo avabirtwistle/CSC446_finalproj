@@ -4,7 +4,11 @@ class Car:
     def __init__(self):
         self.position = self.get_position()
         self.battery_level = self.get_battery_level()
-        self.arrival_time = 0.0
+        self.system_arrival_time = 0.0
+        self.station_arrival_time = 0.0
+        self.queue_entry_time = 0.0
+        self.drive_time = 0.0
+        self.station_routed_to = None
 
     def get_position(self):
         X_MIN = 48.42242
