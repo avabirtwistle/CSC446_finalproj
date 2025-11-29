@@ -1,6 +1,6 @@
 #station mapping.py 
 
-from simulation.charging_station import Charging_Station
+from charging_station import Charging_Station
 
 
 class Station_Meta:

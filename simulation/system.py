@@ -8,9 +8,9 @@ from car import Car
 
 class EV_Charging_System:
     def __init__(self, routing_policy, num_delays_required):
-        self.routing_policy = routing_policy
+        self.routing_policy = routing_policy # the routing policy being used
         self.num_delays_required = num_delays_required
-        self.num_cars_processed = 0
+        self.num_cars_processed = 0 
         self.total_time_in_system = 0.0
         self.total_wait_time = 0.0
 
@@ -23,7 +23,7 @@ class EV_Charging_System:
         # schedule first system arrival
         first_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
         heapq.heappush(self.event_queue,
-                       (first_arrival, EventType.ARRIVAL_SYSTEM, None))
+                       (first_arrival, EventType.ARRIVAL_SYSTEM, None)) # push event with no car yet
 
         # stations
         self.stations = [
@@ -38,11 +38,12 @@ class EV_Charging_System:
         # Addvance sim time, get next event, and the car involved (if car)
         self.sim_time, self.next_event_type, self.event_car = heapq.heappop(self.event_queue)
 
+    #print the time advancement and next event and car metadata
         print(f"\nTime advanced to {self.sim_time:.3f} | "
           f"Next Event = {self.next_event_type.name} | "
           f"Car = {self.event_car.station_routed_to if self.event_car else 'N/A'}")
 
-    # arrivals to the system 
+    # arrivals to the system  
     def arrival_system(self):
         # schedule next system arrival
         next_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
@@ -61,7 +62,7 @@ class EV_Charging_System:
             EventType.ARRIVAL_STATION_3,
         ][station_choice - 1]
 
-        # compute drive time (TEMP: random)
+        # compute drive time 
         drive_time = self.expon(0.5)
         car.drive_time = drive_time
         car.station_routed_to = station_choice

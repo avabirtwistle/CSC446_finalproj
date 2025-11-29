@@ -38,7 +38,6 @@ class Charging_Station:
 
     # car is passed in from system ( so lowest time in event queue)
     def arrival(self, car, event_queue):
-
         # if both chargers busy - join queue
         if self.fast_charger_status == 1 and self.slow_charger_status == 1:
             car.queue_entry_time = self.sim_time()
@@ -66,6 +65,7 @@ class Charging_Station:
             service_time = self.expon(self.mean_slow_service)
             depart_time = self.sim_time() + service_time
 
+            # Schedule thedeparture event
             heapq.heappush(event_queue,
                 (depart_time, self.depart_slow_event, car))
 
