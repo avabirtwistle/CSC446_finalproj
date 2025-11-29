@@ -29,6 +29,13 @@ class Car:
         self.battery_level_initial = self._set_battery_level_initial() 
         self.reachable_stations = self._set_reachable_stations(stations) # list of station meta objects
 
+        # Updated once car is routed, routed station could be removed but ill leave for now
+        self.routed_station = None
+        self.routed_drive_time = None
+        self.time_in_routed_queue = None
+        self.time_charging = None
+        self.total_time_in_system = None
+
     def _set_position(self) -> tuple[float, float]:
         x = np.random.uniform(X_MIN, X_MAX)
         y = np.random.uniform(Y_MIN, Y_MAX)
