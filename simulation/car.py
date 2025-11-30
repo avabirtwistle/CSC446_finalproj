@@ -63,6 +63,7 @@ class Car:
   
     def get_wait_time(self, sim_time: float) -> float:
         return sim_time - self.routed_arrival_time_queue
+
     
     def _set_battery_level_initial(self) -> float:
         return np.random.uniform(BATTERY_MIN, BATTERY_MAX) # initial battery level (%)
