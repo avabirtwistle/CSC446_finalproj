@@ -11,28 +11,32 @@ Y_MAX = 5.2
 SPEED_KM = 40 # average speed in km/h
 
 # Constraints for the maximum and minimum battery levels for generated cars
-BATTERY_MIN = 20 # 20%
+BATTERY_MIN = 30 # 30% OST study recommended this assumption for the equation used for service time
 BATTERY_MAX = 65 # 60%
+TARGET_MAX_FINAL_BATTERY = 80   # max % they will charge up to
 ENERGY_CONSUMPTION_RATE: float= 0.20# (kWh/km)
 BATTERY_CAPACITY: float = 75.0 # (kWh)
 MIN_BATTERY_THRESHOLD = 5 # minimum battery level to consider driving to a station (%)
+MIN_CHARGE_AMOUNT = 5  # minimum amount to charge (%)
 
 class Car:
     position: tuple[float, float]
     battery_level_initial: float
     system_arrival_time: float
     reachable_stations: list[Station_Meta]
+    time_charging: float| None
 
     def __init__(self, system_arrival_time: float, stations: Iterable[Charging_Station]):
         self.system_arrival_time = system_arrival_time # time car was spawned in the system
         self.position = self._set_position() # the car spawn position 
         self.battery_level_initial = self._set_battery_level_initial() 
+        self.target_charge_level = self._set_target_charge_level() # target charge level (%), the system has no knowledge of it. essentially simulates a human desicsion of how much we charge
         self.reachable_stations = self._set_reachable_stations(stations) # list of station meta objects
 
         # Updated once car is routed, routed station could be removed but ill leave for now
         self.routed_station = None
         self.routed_drive_time = None
-        self.time_in_routed_queue = None
+        self.routed_arrival_time_queue = 0.0
         self.time_charging = None
         self.total_time_in_system = None
 
@@ -40,6 +44,25 @@ class Car:
         x = np.random.uniform(X_MIN, X_MAX)
         y = np.random.uniform(Y_MIN, Y_MAX)
         return (x, y) # the car spawn position
+    
+    def _set_target_charge_level(self) -> float:
+        """
+        Sets a target charge level between defined min and max final battery levels.
+        In the real world, this simulates a human decision of how much to charge.
+        Since the system is simulating routing for example by using an app, the system has no knowledge
+        of the target charge level the user is thinking of when they want to charge.
+        Because the system has no knowledge of this target charge level, it cannot use it in routing decisions
+        and must rely on other metrics such as distance, estimated wait time, etc.
+
+        Returns the target charge level (%).
+        """
+        return np.random.uniform(self.battery_level_initial + MIN_CHARGE_AMOUNT, TARGET_MAX_FINAL_BATTERY)
+
+    def get_total_time_in_system(self, sim_time: float) -> float:
+        return sim_time - self.system_arrival_time
+  
+    def get_wait_time(self, sim_time: float) -> float:
+        return sim_time - self.routed_arrival_time_queue
     
     def _set_battery_level_initial(self) -> float:
         return np.random.uniform(BATTERY_MIN, BATTERY_MAX) # initial battery level (%)
@@ -142,5 +165,5 @@ if __name__ == "__main__":
         for meta in car.reachable_stations:
             print(f"  Station {meta.station.station_id}:")
             print(f"    Distance:   {meta.distance_km:.2f} km")
-            print(f"    Drive Time: {meta.drive_time_min:.2f} min")
+            print(f"    Drive Time: {meta.drive_time_minutes:.2f} min")
             print(f"    SoC After:  {meta.soc_after_drive:.2f}%")

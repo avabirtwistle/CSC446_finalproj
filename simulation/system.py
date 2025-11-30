@@ -4,7 +4,7 @@ import numpy as np
 from event import EventType
 from charging_station import Charging_Station
 from car import Car
-
+from routing import Routing
 
 class EV_Charging_System:
     def __init__(self, routing_policy, num_delays_required):
@@ -13,6 +13,7 @@ class EV_Charging_System:
         self.num_cars_processed = 0 
         self.total_time_in_system = 0.0
         self.total_wait_time = 0.0
+        self.total_wait_time_queue = 0.0
 
         self.mean_interarrival_time = 0.3
         self.sim_time = 0.0
@@ -26,11 +27,13 @@ class EV_Charging_System:
                        (first_arrival, EventType.ARRIVAL_SYSTEM, None)) # push event with no car yet
 
         # stations
+        # TODO find the actual kilometer locations this is what chatgpt suggested based on the coordinates
         self.stations = [
-            Charging_Station(1, [48.42806, -123.36959], lambda: self.sim_time),
-            Charging_Station(2, [48.4573,  -123.37509], lambda: self.sim_time),
-            Charging_Station(3, [48.44504, -123.46754], lambda: self.sim_time),
+            Charging_Station(1, [2.0, 3.0], lambda: self.sim_time),   # downtown / central
+            Charging_Station(2, [7.5, 4.0], lambda: self.sim_time),   # uptown / NE side
+            Charging_Station(3, [3.0, 0.8], lambda: self.sim_time),   # west / highway area
         ]
+
 
     def timing(self):
         if not self.event_queue:
@@ -50,43 +53,31 @@ class EV_Charging_System:
         heapq.heappush(self.event_queue,
                        (next_arrival, EventType.ARRIVAL_SYSTEM, None))
 
-        # create the car
-        car = Car()
-        car.system_arrival_time = self.sim_time
+        # create the car and route it
+        car = Car(system_arrival_time=self.sim_time, stations=self.stations)
+        routing = Routing(car, self.routing_policy) # create routing object for the car, this decides where the car will go
+        station_choice_id = routing.get_chosen_station_().station_id # get the station id of the chosen station
 
-        # select a station (TEMP: random)
-        station_choice = np.random.randint(1, 4)  # 1,2,3
+        # select the correct arrival event type based on the id we retrieved from station choice
         station_event = [
             EventType.ARRIVAL_STATION_1,
             EventType.ARRIVAL_STATION_2,
             EventType.ARRIVAL_STATION_3,
-        ][station_choice - 1]
-
-        # compute drive time 
-        drive_time = self.expon(0.5)
-        car.drive_time = drive_time
-        car.station_routed_to = station_choice
-        car.station_arrival_time = self.sim_time + drive_time
+        ][station_choice_id - 1]
 
         # schedule arrival to the station - this is the time it takes the car to drive there
-        heapq.heappush(self.event_queue,
-                       (car.station_arrival_time, station_event, car))
+        heapq.heappush(self.event_queue, (car.routed_arrival_time_queue, station_event, routing))
 
     def expon(self, mean):
         return -mean * np.log(np.random.uniform())
     
     def record_departure(self, car):
-        time_in_system = self.sim_time - car.system_arrival_time
-        self.total_time_in_system += time_in_system
+        # retrieve the total time in system for this car and add to total
+        self.total_time_in_system += car.get_total_time_in_system(self.sim_time)
 
-        if car.queue_entry_time == 0.0:
-            wait_time = car.drive_time
-
-        else:
-            time_in_queue = self.sim_time - car.queue_entry_time
-            wait_time = car.drive_time + time_in_queue
-
-        self.total_wait_time += wait_time
+        # retrieve the wait time (drive + queue) for this car and add to total
+        self.wait_time_queue += car.get_wait_time(self.sim_time) 
+        self.total_wait_time += car.get_wait_time(self.sim_time) + car.routed_drive_time # total wait time includes drive time
         self.num_cars_processed += 1
 
     def print_results(self):

@@ -1,7 +1,11 @@
 import heapq
 import numpy as np
 from event import EventType
+from car import Car
+from car import BATTERY_CAPACITY
 
+SLOW_CHARGER_POWER_KW = 4.8 # BC Hydro Level 2 ~ 4.8 kW
+FAST_CHARGER_POWER_KW = 200   # BC Hydro Fast Charger ~ 200 kW Level 3
 class Charging_Station:
     def __init__(self, station_id, position, sim_time):
 
@@ -40,21 +44,21 @@ class Charging_Station:
     def arrival(self, car, event_queue):
         # if both chargers busy - join queue
         if self.fast_charger_status == 1 and self.slow_charger_status == 1:
-            car.queue_entry_time = self.sim_time()
+            car.routed_arrival_time_queue = self.sim_time() # update the car's arrival time at the station queue if it has to wait
             self.queue.append(car)
             return
 
-        # is teh fast charger free?
+        # is the fast charger free?
         if self.fast_charger_status == 0:
             self.fast_charger_status = 1
 
-            service_time = self.expon(self.mean_fast_service)
+            # compute service time and schedule departure
+            service_time = self.compute_charge_time(car, FAST_CHARGER_POWER_KW)            
             depart_time = self.sim_time() + service_time
 
             #schedule departure event
             heapq.heappush(event_queue,
-                (depart_time, self.depart_fast_event, car))
-
+                (depart_time, self.depart_fast_event, car)) 
             return
 
         # is the slow charger free?
@@ -62,7 +66,7 @@ class Charging_Station:
             self.slow_charger_status = 1
             self.slow_car = car
 
-            service_time = self.expon(self.mean_slow_service)
+            service_time = self.compute_charge_time(car, SLOW_CHARGER_POWER_KW)
             depart_time = self.sim_time() + service_time
 
             # Schedule thedeparture event
@@ -71,6 +75,19 @@ class Charging_Station:
 
             return
 
+    def get_queue_length_at_time(self, query_time: float) -> int:
+        """
+        Estimates the queue length at this station at the specified future time.
+
+        Args:
+            query_time (float): The future time (in hours) to query the queue length for.
+
+        Returns:
+            int: Estimated queue length at the specified time.
+        """
+        # For simplicity, we return the current queue length.
+        # In a more complex implementation, we would simulate the queue evolution over time.
+        return len(self.queue)
 
     # the next event was a departure from the fast charger
     def departure_fast(self, event_queue):
@@ -84,7 +101,8 @@ class Charging_Station:
         next_car = self.queue.pop(0)
         self.fast_charger_status = 1
 
-        service_time = self.expon(self.mean_fast_service)
+        # compute service time and schedule departure
+        service_time = self.compute_charge_time(next_car, FAST_CHARGER_POWER_KW)
         depart_time = self.sim_time() + service_time
 
         heapq.heappush(event_queue,
@@ -101,12 +119,28 @@ class Charging_Station:
         next_car = self.queue.pop(0)
         self.slow_charger_status = 1
 
-        service_time = self.expon(self.mean_slow_service)
+        # compute service time and schedule departure
+        service_time = self.compute_charge_time(next_car, SLOW_CHARGER_POWER_KW)
         depart_time = self.sim_time() + service_time
 
         heapq.heappush(event_queue,
             (depart_time, self.depart_slow_event, next_car))
 
+    def compute_charge_time(self, car: Car, charge_rate_kw: float) -> float:
+        """
+        Computes the estimated charge time (in hours) for the given car
+        based on its target charge level. Affected by the service rate of the charger it gets assigned to.
+
+
+        Args:
+            car (Car): The car to compute charge time for.
+            Returns:       
+            float: Estimated charge time in minutes
+        """
+        soc_diff = (car.target_charge_level - car.battery_level_initial) / 100.0 # fraction of battery to charge
+        time_in_minutes = ((soc_diff * BATTERY_CAPACITY) / charge_rate_kw) * 60.0 
+        car.time_charging = time_in_minutes # update the car's time charging field
+        return time_in_minutes # return the service time in minutes
 
     def expon(self, mean):
         return -mean * np.log(np.random.uniform())
