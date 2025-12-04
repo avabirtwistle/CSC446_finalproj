@@ -187,5 +187,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 10)
+    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 50)
     sim.main()
