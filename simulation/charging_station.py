@@ -57,7 +57,7 @@ class Charging_Station:
             self.fast_charger_status = 1
 
             # compute service time and schedule departure
-            service_time = self.compute_charge_time(car.target_charge_level, car.battery_level_initial, FAST_CHARGER_POWER_KW)            
+            service_time = self.compute_charge_time(car.target_charge_level, car.battery_level_initial, FAST_CHARGER_POWER_KW)          
             car.time_charging = service_time
             depart_time = self.sim_time() + service_time
             print(f"Car's initial battery level: {car.battery_level_initial:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
@@ -98,6 +98,7 @@ class Charging_Station:
         # take next car from queue
         next_car = self.queue.pop(0)
         self.fast_charger_status = 1
+        next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time_queue  # set the car's time in queue
 
         # compute service time and schedule departure
         service_time = self.compute_charge_time(next_car.target_charge_level, next_car.battery_level_initial, FAST_CHARGER_POWER_KW)
@@ -116,6 +117,7 @@ class Charging_Station:
 
         next_car = self.queue.pop(0)
         self.slow_charger_status = 1
+        next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time_queue
 
         # compute service time and schedule departure
         service_time = self.compute_charge_time(next_car.target_charge_level, next_car.battery_level_initial, SLOW_CHARGER_POWER_KW)

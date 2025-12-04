@@ -1,9 +1,9 @@
 import numpy as np
-
 from station_meta import Station_Meta
 from typing import Iterable
 from charging_station import Charging_Station
 from constants import ENERGY_CONSUMPTION_RATE, BATTERY_CAPACITY, MIN_BATTERY_THRESHOLD, BATTERY_MIN, BATTERY_MAX, TARGET_MAX_FINAL_BATTERY, MIN_CHARGE_AMOUNT
+
 # Constraints for the min and max distance for the size of the simulation plane can be adjusted based on the desired area
 X_MIN = 0.0 
 X_MAX = 9.3
@@ -29,6 +29,7 @@ class Car:
         self.routed_drive_time = None
         self.routed_arrival_time_queue = 0.0
         self.time_charging = None
+        self.time_in_queue = 0.0
         self.total_time_in_system = None
 
     def _set_position(self) -> tuple[float, float]:
@@ -51,11 +52,7 @@ class Car:
 
     def get_total_time_in_system(self, sim_time: float) -> float:
         return sim_time - self.system_arrival_time
-  
-    def get_wait_time(self, sim_time: float) -> float:
-        return sim_time - self.routed_arrival_time_queue
 
-    
     def _set_battery_level_initial(self) -> float:
         return np.random.uniform(BATTERY_MIN, BATTERY_MAX) # initial battery level (%)
     
