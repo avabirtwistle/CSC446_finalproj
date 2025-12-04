@@ -117,8 +117,8 @@ class EV_Charging_System:
         self.total_time_in_system += car.get_total_time_in_system(self.sim_time)
 
         # retrieve the wait time (drive + queue) for this car and add to total
-        self.total_wait_time_queue += car.get_wait_time(self.sim_time) 
-        self.total_wait_time += car.get_wait_time(self.sim_time) + car.routed_drive_time # total wait time includes drive time
+        self.total_wait_time_queue += car.time_in_queue
+        self.total_wait_time += car.time_in_queue + car.routed_drive_time # total wait time includes drive time
         self.num_cars_processed += 1
 
 
@@ -187,5 +187,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 50)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 50)
     sim.main()

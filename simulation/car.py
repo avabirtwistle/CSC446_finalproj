@@ -29,6 +29,7 @@ class Car:
         self.routed_drive_time = None
         self.routed_arrival_time_queue = 0.0
         self.time_charging = None
+        self.time_in_queue = 0.0
         self.total_time_in_system = None
 
     def _set_position(self) -> tuple[float, float]:
@@ -51,11 +52,7 @@ class Car:
 
     def get_total_time_in_system(self, sim_time: float) -> float:
         return sim_time - self.system_arrival_time
-  
-    def get_wait_time(self, sim_time: float) -> float:
-        return sim_time - self.routed_arrival_time_queue
 
-    
     def _set_battery_level_initial(self) -> float:
         return np.random.uniform(BATTERY_MIN, BATTERY_MAX) # initial battery level (%)
     
