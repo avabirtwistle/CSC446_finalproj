@@ -1,23 +1,15 @@
 import numpy as np
 
 from station_meta import Station_Meta
-from charging_station import Charging_Station
 from typing import Iterable
+from charging_station import Charging_Station
+from constants import ENERGY_CONSUMPTION_RATE, BATTERY_CAPACITY, MIN_BATTERY_THRESHOLD, BATTERY_MIN, BATTERY_MAX, TARGET_MAX_FINAL_BATTERY, MIN_CHARGE_AMOUNT
 # Constraints for the min and max distance for the size of the simulation plane can be adjusted based on the desired area
 X_MIN = 0.0 
 X_MAX = 9.3
 Y_MIN = 0.0
 Y_MAX = 5.2
 SPEED_KM = 40 # average speed in km/h
-
-# Constraints for the maximum and minimum battery levels for generated cars
-BATTERY_MIN = 30 # 30% OST study recommended this assumption for the equation used for service time
-BATTERY_MAX = 65 # 60%
-TARGET_MAX_FINAL_BATTERY = 80   # max % they will charge up to
-ENERGY_CONSUMPTION_RATE: float= 0.20# (kWh/km)
-BATTERY_CAPACITY: float = 75.0 # (kWh)
-MIN_BATTERY_THRESHOLD = 5 # minimum battery level to consider driving to a station (%)
-MIN_CHARGE_AMOUNT = 5  # minimum amount to charge (%)
 
 class Car:
     position: tuple[float, float]
@@ -34,7 +26,6 @@ class Car:
         self.reachable_stations = self._set_reachable_stations(stations) # list of station meta objects
 
         # Updated once car is routed, routed station could be removed but ill leave for now
-        self.routed_station = None
         self.routed_drive_time = None
         self.routed_arrival_time_queue = 0.0
         self.time_charging = None
@@ -81,7 +72,7 @@ class Car:
 
         for station in stations:
             # get the estimate soc after drive
-            result = self._get_estimated_soc_after_drive(station)
+            result = self.get_estimated_soc_after_drive(station)
             if result is None:
                 continue # car cannot reach this station, check the next station
 
@@ -99,7 +90,7 @@ class Car:
             # TODO: there must be at least one reachable station, otherwise the car cannot be serviced... need to determine the python equivalent for throwing and catching exceptions..
         return reachable_stations # return list of station_meta objects 
     
-    def _get_estimated_soc_after_drive(self, station) -> tuple[float, float] | None:
+    def get_estimated_soc_after_drive(self, station) -> tuple[float, float] | None:
         """
         Computes the expected SoC (%) after driving from the EV's current position
         to the specified charging station.
@@ -130,41 +121,4 @@ class Car:
         station_position = station.position # (x,y) coordinate of station
         distance_km = np.sqrt((self.position[0] - station_position[0])**2 + (self.position[1] - station_position[1])**2)
         return distance_km
-    
-if __name__ == "__main__":
-    # Stations placed inside the km-plane (0–9.3 km, 0–5.2 km)
-    s1 = Charging_Station(station_id=1, position=(1.0, 1.0), sim_time=0.0)   # close
-    s2 = Charging_Station(station_id=2, position=(5.0, 3.0), sim_time=0.0)   # medium
-    s3 = Charging_Station(station_id=3, position=(9.0, 5.0), sim_time=0.0)   # far
-    stations = [s1, s2, s3]
-
-    car = Car(system_arrival_time=0.0, stations=stations)
-
-    print("\n=== CAR INFO ===")
-    print(f"Spawn Position: {car.position}")
-    print(f"Initial Battery: {car.battery_level_initial:.2f}%")
-
-    print("\n=== STATION STATUS ===")
-    for station in stations:
-        distance = car._get_euclidian_to_station(station)
-        result = car._get_estimated_soc_after_drive(station)
-
-        print(f"\nStation {station.station_id}:")
-        print(f"  Distance: {distance:.2f} km")
-
-        if result is None:
-            print("  Status: UNREACHABLE (insufficient battery)")
-        else:
-            soc_after, _ = result
-            print(f"  SoC After Drive: {soc_after:.2f}%")
-            print("  Status: REACHABLE")
-
-    print("\n=== REACHABLE STATIONS ===")
-    if not car.reachable_stations:
-        print("  None")
-    else:
-        for meta in car.reachable_stations:
-            print(f"  Station {meta.station.station_id}:")
-            print(f"    Distance:   {meta.distance_km:.2f} km")
-            print(f"    Drive Time: {meta.drive_time_minutes:.2f} min")
-            print(f"    SoC After:  {meta.soc_after_drive:.2f}%")
+  
