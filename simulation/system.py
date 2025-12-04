@@ -1,92 +1,128 @@
 # ev_charging_system.py
 import heapq
 import numpy as np
+from routing_policies import RoutingPolicy
 from event import EventType
 from charging_station import Charging_Station
 from car import Car
-
+from routing import Routing
 
 class EV_Charging_System:
     def __init__(self, routing_policy, num_delays_required):
-        self.routing_policy = routing_policy
+        self.routing_policy = routing_policy # the routing policy being used
         self.num_delays_required = num_delays_required
-        self.num_cars_processed = 0
+        self.num_cars_processed = 0 
         self.total_time_in_system = 0.0
         self.total_wait_time = 0.0
+        self.total_wait_time_queue = 0.0
 
-        self.mean_interarrival_time = 0.3
+        self.mean_interarrival_time = 10.0
         self.sim_time = 0.0
-
+        self.void_counter = [0, 0, 0]  # list to track void cars at each station
         # Event list
         self.event_queue = []   # (time, event_type, payload)
 
         # schedule first system arrival
         first_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
         heapq.heappush(self.event_queue,
-                       (first_arrival, EventType.ARRIVAL_SYSTEM, None))
+                       (first_arrival, EventType.ARRIVAL_SYSTEM, None)) # push event with no car yet
 
         # stations
+        # TODO find the actual kilometer locations this is what chatgpt suggested based on the coordinates
         self.stations = [
-            Charging_Station(1, [48.42806, -123.36959], lambda: self.sim_time),
-            Charging_Station(2, [48.4573,  -123.37509], lambda: self.sim_time),
-            Charging_Station(3, [48.44504, -123.46754], lambda: self.sim_time),
+            Charging_Station(1, [2.0, 3.0], lambda: self.sim_time),   # downtown / central
+            Charging_Station(2, [7.5, 4.0], lambda: self.sim_time),   # uptown / NE side
+            Charging_Station(3, [3.0, 0.8], lambda: self.sim_time),   # west / highway area
+        ]
+
+        self.counter_void = [
+            0,  # station 1 void cars
+            0,  # station 2 void cars
+            0   # station 3 void cars
         ]
 
     def timing(self):
+        print("\n=== TIMING() ===")
+
         if not self.event_queue:
             raise Exception("Event queue empty — simulation cannot continue.")
-        # Addvance sim time, get next event, and the car involved (if car)
-        self.sim_time, self.next_event_type, self.event_car = heapq.heappop(self.event_queue)
 
-        print(f"\nTime advanced to {self.sim_time:.3f} | "
-          f"Next Event = {self.next_event_type.name} | "
-          f"Car = {self.event_car.station_routed_to if self.event_car else 'N/A'}")
+        # pop next event
+        self.sim_time, self.next_event_type, self.routing = heapq.heappop(self.event_queue)
 
-    # arrivals to the system 
+        # determine if there's a car
+        if self.routing and hasattr(self.routing, "car"):
+            self.event_car = self.routing.car
+        else:
+            self.event_car = None
+
+        # print concise info
+        car_info = (
+            f"Car at station {self.event_car.routed_station.station.station_id}"
+            if self.event_car else
+            "No car"
+        )
+
+        print(f"Time: {self.sim_time:.3f} | "
+            f"Event: {self.next_event_type.name} | "
+            f"{car_info}")
+
     def arrival_system(self):
+        print("\n=== arrival_system() ===")
         # schedule next system arrival
         next_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
         heapq.heappush(self.event_queue,
-                       (next_arrival, EventType.ARRIVAL_SYSTEM, None))
+                    (next_arrival, EventType.ARRIVAL_SYSTEM, None))
 
-        # create the car
-        car = Car()
-        car.system_arrival_time = self.sim_time
+        # create the car and routing object
+        car = Car(system_arrival_time=self.sim_time, stations=self.stations)
+        routing = Routing(car, self.routing_policy, void_counter=self.void_counter)
 
-        # select a station (TEMP: random)
-        station_choice = np.random.randint(1, 4)  # 1,2,3
+        # Actually perform routing and set routed_station
+        chosen_station = routing.route()
+        routing.routed_station = chosen_station  # (if not set inside route())
+
+        if routing.routed_station is None:
+            print("No station available for routing (car balks).")
+            return
+
+        print(f"Car {car.battery_level_initial} routed to station {routing.routed_station.station.station_id}")
+        station_choice_id = routing.routed_station.station.station_id
+
+
+        # select the correct arrival event type based on the id we retrieved from station choice
         station_event = [
-            EventType.ARRIVAL_STATION_1,
+            EventType.ARRIVAL_STATION_1, 
             EventType.ARRIVAL_STATION_2,
             EventType.ARRIVAL_STATION_3,
-        ][station_choice - 1]
-
-        # compute drive time (TEMP: random)
-        drive_time = self.expon(0.5)
-        car.drive_time = drive_time
-        car.station_routed_to = station_choice
-        car.station_arrival_time = self.sim_time + drive_time
+        ][station_choice_id - 1]
 
         # schedule arrival to the station - this is the time it takes the car to drive there
-        heapq.heappush(self.event_queue,
-                       (car.station_arrival_time, station_event, car))
+        heapq.heappush(self.event_queue, (car.routed_arrival_time_queue, station_event, routing))
 
-    def expon(self, mean):
+    def expon(self, mean): # generate exponential random variable
+        """
+        Generate an exponential random variable with the given mean.
+        
+        :param mean: The mean of the exponential distribution.
+        :return: A random variable drawn from the exponential distribution.
+        """
         return -mean * np.log(np.random.uniform())
     
     def record_departure(self, car):
-        time_in_system = self.sim_time - car.system_arrival_time
-        self.total_time_in_system += time_in_system
+        """
+        Records the departure of a car from the system, updating statistics.
+            
+        :param car: The car that is departing.        
+        """
+        # retrieve the total time in system for this car and add to total
+        self.total_time_in_system += car.get_total_time_in_system(self.sim_time)
 
-        if car.queue_entry_time == 0.0:
-            wait_time = car.drive_time
-
-        else:
-            time_in_queue = self.sim_time - car.queue_entry_time
-            wait_time = car.drive_time + time_in_queue
-
-        self.total_wait_time += wait_time
+        # retrieve the wait time (drive + queue) for this car and add to total
+        self.total_wait_time_queue += car.get_wait_time(self.sim_time) 
+        self.total_wait_time += car.get_wait_time(self.sim_time) + car.routed_drive_time # total wait time includes drive time
         self.num_cars_processed += 1
+
 
     def print_results(self):
         """Prints the final simulation results."""
@@ -100,14 +136,15 @@ class EV_Charging_System:
         print("\n" + "="*50)
         print("Simulation Results")
         print(f"Total Cars Processed: {self.num_cars_processed}")
-        print(f"Total Time in System: {self.total_time_in_system:.2f} hrs")
-        print(f"Total Wait Time (incl. drive): {self.total_wait_time:.2f} hrs")
+        print(f"Total Time in System: {self.total_time_in_system:.2f} minutes")
+        print(f"Total Wait Time (incl. drive): {self.total_wait_time:.2f} minutes")
         print("-" * 50)
-        print(f"Average Time in System: {avg_time_in_system:.2f} hrs")
-        print(f"Average Wait Time (incl. drive): {avg_wait_time:.2f} hrs")
+        print(f"Average Time in System: {avg_time_in_system:.2f} minutes")
+        print(f"Average Wait Time (incl. drive): {avg_wait_time:.2f} minutes")
         print("="*50)
 
     def main(self):
+        sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 10)
         while self.num_cars_processed < self.num_delays_required:
             self.timing() # - to get the next event
 
@@ -118,40 +155,40 @@ class EV_Charging_System:
                     self.arrival_system()
 
                 case EventType.ARRIVAL_STATION_1:
-                    self.stations[0].arrival(self.event_car, self.event_queue)
+                    self.stations[0].arrival(self.routing, self.event_queue)
 
                 case EventType.ARRIVAL_STATION_2:
-                    self.stations[1].arrival(self.event_car, self.event_queue)
+                    self.stations[1].arrival(self.routing, self.event_queue)
 
                 case EventType.ARRIVAL_STATION_3:
-                    self.stations[2].arrival(self.event_car, self.event_queue)
+                    self.stations[2].arrival(self.routing, self.event_queue)
 
                 case EventType.DEPARTURE_STATION_1_FAST:
                     self.stations[0].departure_fast(self.event_queue)
-                    self.record_departure(self.event_car)
+                    self.record_departure(self.routing)
 
                 case EventType.DEPARTURE_STATION_1_SLOW:
                     self.stations[0].departure_slow(self.event_queue)
-                    self.record_departure(self.event_car)
+                    self.record_departure(self.routing)
 
                 case EventType.DEPARTURE_STATION_2_FAST:
                     self.stations[1].departure_fast(self.event_queue)
-                    self.record_departure(self.event_car)
+                    self.record_departure(self.routing)
 
                 case EventType.DEPARTURE_STATION_2_SLOW:
                     self.stations[1].departure_slow(self.event_queue)
-                    self.record_departure(self.event_car)
+                    self.record_departure(self.routing)
 
                 case EventType.DEPARTURE_STATION_3_FAST:
                     self.stations[2].departure_fast(self.event_queue)
-                    self.record_departure(self.event_car)
+                    self.record_departure(self.routing)
 
                 case EventType.DEPARTURE_STATION_3_SLOW:
                     self.stations[2].departure_slow(self.event_queue)
-                    self.record_departure(self.event_car)
+                    self.record_departure(self.routing)
 
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System("shortest_estimated_time", 100000)
+    sim = EV_Charging_System("shortest_estimated_wait", 10)
     sim.main()
