@@ -1,4 +1,3 @@
-# ev_charging_system.py
 import heapq
 import numpy as np
 from routing_policies import RoutingPolicy
@@ -9,7 +8,7 @@ from routing import Routing
 
 class EV_Charging_System:
     def __init__(self, routing_policy, num_delays_required):
-        self.routing_policy = routing_policy # the routing policy being used
+        self.routing_policy = routing_policy # The routing policy being used
         self.num_delays_required = num_delays_required
         self.num_cars_processed = 0 
         self.total_time_in_system = 0.0
@@ -18,21 +17,21 @@ class EV_Charging_System:
 
         self.mean_interarrival_time = 10.0
         self.sim_time = 0.0
-        self.void_counter = [0, 0, 0]  # list to track void cars at each station
+        self.void_counter = [0, 0, 0]  # List to track cars on the way to each station
+
         # Event list
         self.event_queue = []   # (time, event_type, payload)
 
-        # schedule first system arrival
+        # Schedule first system arrival
         first_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
         heapq.heappush(self.event_queue,
-                       (first_arrival, EventType.ARRIVAL_SYSTEM, None)) # push event with no car yet
+                       (first_arrival, EventType.ARRIVAL_SYSTEM, None)) # Push event without routing
 
-        # stations
-        # TODO find the actual kilometer locations this is what chatgpt suggested based on the coordinates
+        # Stations
         self.stations = [
-            Charging_Station(1, [2.0, 3.0], lambda: self.sim_time),   # downtown / central
-            Charging_Station(2, [7.5, 4.0], lambda: self.sim_time),   # uptown / NE side
-            Charging_Station(3, [3.0, 0.8], lambda: self.sim_time),   # west / highway area
+            Charging_Station(1, [2.0, 3.0], lambda: self.sim_time),   # Downtown / central
+            Charging_Station(2, [7.5, 4.0], lambda: self.sim_time),   # Uptown / NE side
+            Charging_Station(3, [3.0, 0.8], lambda: self.sim_time),   # West / highway area
         ]
 
         self.counter_void = [
@@ -47,7 +46,7 @@ class EV_Charging_System:
         if not self.event_queue:
             raise Exception("Event queue empty — simulation cannot continue.")
 
-        # pop next event
+        # Pop next min time event
         self.sim_time, self.next_event_type, self.routing = heapq.heappop(self.event_queue)
 
         # determine if there's a car
@@ -69,12 +68,12 @@ class EV_Charging_System:
 
     def arrival_system(self):
         print("\n=== arrival_system() ===")
-        # schedule next system arrival
+        # Schedule next system arrival
         next_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
         heapq.heappush(self.event_queue,
                     (next_arrival, EventType.ARRIVAL_SYSTEM, None))
 
-        # create the car and routing object
+        # Create the car and routing object
         car = Car(system_arrival_time=self.sim_time, stations=self.stations)
         routing = Routing(car, self.routing_policy, void_counter=self.void_counter)
 
@@ -89,15 +88,14 @@ class EV_Charging_System:
         print(f"Car {car.battery_level_initial} routed to station {routing.routed_station.station.station_id}")
         station_choice_id = routing.routed_station.station.station_id
 
-
-        # select the correct arrival event type based on the id we retrieved from station choice
+        # Select the correct arrival event type based on the id we retrieved from station choice
         station_event = [
             EventType.ARRIVAL_STATION_1, 
             EventType.ARRIVAL_STATION_2,
             EventType.ARRIVAL_STATION_3,
         ][station_choice_id - 1]
 
-        # schedule arrival to the station - this is the time it takes the car to drive there
+        # Schedule arrival to the station - this is the time it takes the car to drive there
         heapq.heappush(self.event_queue, (car.routed_arrival_time_queue, station_event, routing))
 
     def expon(self, mean): # generate exponential random variable
@@ -144,7 +142,6 @@ class EV_Charging_System:
         print("="*50)
 
     def main(self):
-        sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 10)
         while self.num_cars_processed < self.num_delays_required:
             self.timing() # - to get the next event
 
@@ -190,5 +187,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System("shortest_estimated_wait", 10)
+    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 10)
     sim.main()

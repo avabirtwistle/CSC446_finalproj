@@ -1,9 +1,9 @@
 import numpy as np
-
 from station_meta import Station_Meta
 from typing import Iterable
 from charging_station import Charging_Station
 from constants import ENERGY_CONSUMPTION_RATE, BATTERY_CAPACITY, MIN_BATTERY_THRESHOLD, BATTERY_MIN, BATTERY_MAX, TARGET_MAX_FINAL_BATTERY, MIN_CHARGE_AMOUNT
+
 # Constraints for the min and max distance for the size of the simulation plane can be adjusted based on the desired area
 X_MIN = 0.0 
 X_MAX = 9.3
