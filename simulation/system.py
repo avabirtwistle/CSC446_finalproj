@@ -34,12 +34,6 @@ class EV_Charging_System:
             Charging_Station(3, [3.0, 0.8], lambda: self.sim_time),   # West / highway area
         ]
 
-        self.counter_void = [
-            0,  # station 1 void cars
-            0,  # station 2 void cars
-            0   # station 3 void cars
-        ]
-
     def timing(self):
         print("\n=== TIMING() ===")
 
@@ -187,5 +181,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 50)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10000)
     sim.main()

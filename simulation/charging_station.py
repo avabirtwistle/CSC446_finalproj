@@ -43,6 +43,8 @@ class Charging_Station:
     # car is passed in from system ( so lowest time in event queue)
     def arrival(self, routing, event_queue):
         print("\n=== arrival() ===")
+        idx = routing.routed_station.get_station_id() - 1
+        routing.void_counter[idx] -= 1 if routing.void_counter[idx] > 0 else None
         car = routing.car
         # if both chargers busy - join queue
         if self.fast_charger_status == 1 and self.slow_charger_status == 1:
