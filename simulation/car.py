@@ -1,35 +1,32 @@
 import numpy as np
+
 from station_meta import Station_Meta
 from typing import Iterable
 from charging_station import Charging_Station
-from constants import ENERGY_CONSUMPTION_RATE, BATTERY_CAPACITY, MIN_BATTERY_THRESHOLD, BATTERY_MIN, BATTERY_MAX, TARGET_MAX_FINAL_BATTERY, MIN_CHARGE_AMOUNT
-
-# Constraints for the min and max distance for the size of the simulation plane can be adjusted based on the desired area
-X_MIN = 0.0 
-X_MAX = 9.3
-Y_MIN = 0.0
-Y_MAX = 5.2
-SPEED_KM = 40 # average speed in km/h
+from constants import ENERGY_CONSUMPTION_RATE, BATTERY_CAPACITY, MIN_BATTERY_THRESHOLD, BATTERY_MIN, BATTERY_MAX, TARGET_MAX_FINAL_BATTERY, MIN_CHARGE_AMOUNT, X_MIN, X_MAX, Y_MIN, Y_MAX, SPEED_KM
 
 class Car:
-    position: tuple[float, float]
-    battery_level_initial: float
-    system_arrival_time: float
-    reachable_stations: list[Station_Meta]
-    time_charging: float| None
+    position: tuple[float, float] # (x,y) coordinate
+    battery_level_initial: float # initial battery level (%)
+    system_arrival_time: float  # time car was spawned in the system
+    reachable_stations: list[Station_Meta] # list of reachable station meta objects
+    time_charging: float | None # time spent charging (minutes)
+    target_charge_level: float # target charge level (%)
+    routed_drive_time: float | None # drive time to routed station (minutes)
+    routed_arrival_time_queue: float # arrival time at station queue
+    total_time_in_system: float | None # total time in system (minutes)
 
     def __init__(self, system_arrival_time: float, stations: Iterable[Charging_Station]):
-        self.system_arrival_time = system_arrival_time # time car was spawned in the system
-        self.position = self._set_position() # the car spawn position 
+        self.system_arrival_time = system_arrival_time 
+        self.position = self._set_position()
         self.battery_level_initial = self._set_battery_level_initial() 
-        self.target_charge_level = self._set_target_charge_level() # target charge level (%), the system has no knowledge of it. essentially simulates a human desicsion of how much we charge
-        self.reachable_stations = self._set_reachable_stations(stations) # list of station meta objects
+        self.target_charge_level = self._set_target_charge_level() 
+        self.reachable_stations = self._set_reachable_stations(stations) 
 
-        # Updated once car is routed, routed station could be removed but ill leave for now
+        # Updated once car is routed
         self.routed_drive_time = None
         self.routed_arrival_time_queue = 0.0
         self.time_charging = None
-        self.time_in_queue = 0.0
         self.total_time_in_system = None
 
     def _set_position(self) -> tuple[float, float]:
@@ -51,9 +48,17 @@ class Car:
         return np.random.uniform(self.battery_level_initial + MIN_CHARGE_AMOUNT, TARGET_MAX_FINAL_BATTERY)
 
     def get_total_time_in_system(self, sim_time: float) -> float:
+        """
+        Computes the total time the car has been in the system.
+        Returns total time in system (minutes).
+        """
         return sim_time - self.system_arrival_time
 
     def _set_battery_level_initial(self) -> float:
+        """
+        Sets an initial battery level between defined min and max battery levels.
+        Returns the initial battery level (%).
+        """
         return np.random.uniform(BATTERY_MIN, BATTERY_MAX) # initial battery level (%)
     
     def _set_reachable_stations(self, stations: Iterable[Charging_Station]) -> list[Station_Meta]:
@@ -69,34 +74,32 @@ class Car:
 
         for station in stations:
             # get the estimate soc after drive
-            result = self.get_estimated_soc_after_drive(station)
-            if result is None:
+            distance_km = self._get_euclidian_to_station(station)
+            soc_after_drive = self.get_estimated_soc_after_driving_km(distance_km)
+
+            if soc_after_drive is None:
                 continue # car cannot reach this station, check the next station
 
-            # otherwise the car can reach the station so make a station_meta object
-            soc_after_drive, distance_km = result 
+            # otherwise station is reachable, create station meta object
             drive_time_minutes = distance_km / (SPEED_KM / 60)  # get the drive time in minutes
             station_meta = Station_Meta(
                 station, # station object
                 distance_km, # eculidian distance from spawn point of car to station
                 drive_time_minutes, # drive time from spawn point of car to station
-                soc_after_drive # estimated soc after driving to station, could also add estimated charge time fast and slow
+                soc_after_drive # estimated soc after driving to station
             )
             # add to reachable stations list
             reachable_stations.append(station_meta)
-            # TODO: there must be at least one reachable station, otherwise the car cannot be serviced... need to determine the python equivalent for throwing and catching exceptions..
+
         return reachable_stations # return list of station_meta objects 
     
-    def get_estimated_soc_after_drive(self, station) -> tuple[float, float] | None:
+    def get_estimated_soc_after_driving_km(self, distance_km) -> float | None:
         """
         Computes the expected SoC (%) after driving from the EV's current position
         to the specified charging station.
 
-        Returns (soc_after_drive, distance_km), or None if the vehicle cannot reach
-        the station (SoC would fall below MIN_BATTERY_THRESHOLD).
+        Returns soc_after_drive, or None if the vehicle cannot reach it the station (SoC would fall below MIN_BATTERY_THRESHOLD).
         """
-        distance_km = self._get_euclidian_to_station(station)
-
         # energy used to drive there (one-way)
         energy_used = distance_km * ENERGY_CONSUMPTION_RATE
 
@@ -106,8 +109,7 @@ class Car:
         # if the car cannot even physically reach the station
         if soc_after_drive < MIN_BATTERY_THRESHOLD:
             return None   
-
-        return (soc_after_drive, distance_km)
+        return soc_after_drive
 
     def _get_euclidian_to_station(self, station) -> float:
         """

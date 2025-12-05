@@ -95,6 +95,7 @@ class Routing:
         chosen_id = chosen.get_station_id()
         chosen_wait = wait_times[chosen]
         soc_after_drive = self.car.get_estimated_soc_after_drive(chosen.station)
+
         self.car.soc_initial = soc_after_drive[0]
         print(f"  • Estimated SoC after drive = {soc_after_drive[0]:.2f}%")
         print(f"\n=== CHOSEN STATION ===")
@@ -108,9 +109,9 @@ class Routing:
         Helper for eliminating the stations that have too long of a queue from consideration 
         Returns the queue length >=0 if valid, returns -1 if false
         """
-        q_len = station_meta.get_effective_queue_length(void_counter=void_counter)
+        q_len = station_meta.get_effective_queue_length(void_counter=void_counter) # get the number of cars in the queue and on the way to the station
         if q_len > MAX_QUEUE_LENGTH and battery_level > MIN_BATTERY_THRESHOLD:
-            return -1 # if we shouldnt consider this station return -1
+            return -1 # if we shouldn't consider this station return -1
         return q_len # if we can consider this stations return the queue length
 
     def _apply_routing_decision(self, chosen: Station_Meta, void_counter: list[int]) -> None:
