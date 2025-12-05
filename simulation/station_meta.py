@@ -4,7 +4,6 @@ from charging_station import Charging_Station
 # This includes distance, drive time, and estimated SoC after driving there
 # Used in routing decisions
 # the actual routed station object is not stored here and only in the car object
-ESTIMATION_FACTOR = 1.2  # factor to multiply estimated wait times by for estimation
 class Station_Meta:
     station: Charging_Station            # the actual station object
     distance_km: float                  # the euclidean distance for the ev to the station
