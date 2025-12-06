@@ -14,6 +14,7 @@ class Car:
     target_charge_level: float # target charge level (%)
     routed_drive_time: float | None # drive time to routed station (minutes)
     routed_arrival_time_queue: float # arrival time at station queue
+    time_in_queue: float # time spent in queue (minutes)
     total_time_in_system: float | None # total time in system (minutes)
 
     def __init__(self, system_arrival_time: float, stations: Iterable[Charging_Station]):
@@ -28,6 +29,7 @@ class Car:
         self.routed_arrival_time_queue = 0.0
         self.time_charging = None
         self.total_time_in_system = None
+        self.time_in_queue = 0.0
 
     def _set_position(self) -> tuple[float, float]:
         x = np.random.uniform(X_MIN, X_MAX)

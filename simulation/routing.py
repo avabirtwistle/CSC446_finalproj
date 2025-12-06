@@ -21,6 +21,12 @@ class Routing:
         }
 
     def route(self) -> Station_Meta | None:
+        """
+        Docstring for route which selects the routing policy to use and calls the appropriate function
+        
+        :param self: Description
+        :rtype: Station_Meta | None
+        """
         try:
             # look up the correct function to call base on the policy provided 
             policy_fn = self._policy_map[self.routing_policy]
@@ -30,6 +36,12 @@ class Routing:
         return policy_fn()  # if the policy exists call it
 
     def _closest_station_first(self) -> Station_Meta | None:
+        """
+        Implements the closest station first routing policy.
+
+        :param self: Description
+        :rtype: Station_Meta | None
+        """
         # get the list of reachable stations for this car
         stations: list[Station_Meta] = list(self.car.reachable_stations)
         print("\n==================== NEW ROUTING DECISION ====================")
