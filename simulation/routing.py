@@ -65,7 +65,7 @@ class Routing:
 
         for station_meta in stations:
             st_id = station_meta.get_station_id()
-            drive_time = station_meta.drive_time_minutes
+            drive_time = station_meta.get_drive_time_minutes()
             print(f"\nChecking station {st_id}:")
             print(f"  • Drive time = {drive_time:.2f} min")
 
@@ -119,6 +119,4 @@ class Routing:
         """
         void_counter[chosen.get_station_id() - 1] += 1 # increment the void counter for the chosen station indicating a car is somewhere in the simultion
         self.car.routed_station = chosen # update routed station with station_meta object
-        self.car.routed_arrival_time_queue = self.car.system_arrival_time + chosen.drive_time_minutes  # set arrival time at station including drive time
-        
         self.car.routed_drive_time = chosen.drive_time_minutes 
