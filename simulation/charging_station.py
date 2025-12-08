@@ -73,7 +73,6 @@ class Charging_Station:
         if self.slow_charger_status == 0:
             print(f"Slow charger free at station {self.station_id}. Car starting to charge.")
             self.slow_charger_status = 1
-            self.slow_car = car
 
             # compute service time and schedule departure
             service_time = self.compute_charge_time(car.target_charge_level, car.battery_level_initial, SLOW_CHARGER_POWER_KW)

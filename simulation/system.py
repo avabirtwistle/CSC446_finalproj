@@ -182,5 +182,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 30)
     sim.main()
