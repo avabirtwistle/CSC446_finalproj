@@ -137,6 +137,7 @@ class EV_Charging_System:
         print("="*50)
 
     def main(self):
+        np.random.seed(42)
         while self.num_cars_processed < self.num_delays_required:
             self.timing() # - to get the next event
 
