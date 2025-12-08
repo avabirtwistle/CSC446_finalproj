@@ -7,7 +7,7 @@ from car import Car
 from routing import Routing
 
 class EV_Charging_System:
-    def __init__(self, routing_policy, num_delays_required):
+    def __init__(self, routing_policy, num_delays_required, seed):
         self.routing_policy = routing_policy # The routing policy being used
         self.num_delays_required = num_delays_required
         self.num_cars_processed = 0 
@@ -15,6 +15,7 @@ class EV_Charging_System:
         self.total_wait_time = 0.0
         self.total_wait_time_queue = 0.0
         self.total_balking = 0
+        np.random.seed(seed)
 
         self.mean_interarrival_time = 10.0
         self.sim_time = 0.0
@@ -137,7 +138,6 @@ class EV_Charging_System:
         print("="*50)
 
     def main(self):
-        np.random.seed(42)
         while self.num_cars_processed < self.num_delays_required:
             self.timing() # - to get the next event
 
@@ -183,5 +183,7 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 70)
+    # CLOSEST_STATION_FIRST = "closest_station_first"
+    # SHORTEST_ESTIMATED_WAIT
+    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 1000, 10)
     sim.main()

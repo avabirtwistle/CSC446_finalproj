@@ -93,10 +93,10 @@ class Routing:
         chosen = min(wait_times, key=lambda s: wait_times[s])
         chosen_id = chosen.get_station_id()
         chosen_wait = wait_times[chosen]
-        soc_after_drive = self.car.get_estimated_soc_after_drive(chosen.station)
+        soc_after_drive = self.car.get_estimated_soc_after_driving_km(chosen.distance_km)
 
-        self.car.soc_initial = soc_after_drive[0]
-        print(f"  • Estimated SoC after drive = {soc_after_drive[0]:.2f}%")
+        self.car.soc_initial = soc_after_drive
+        print(f"  • Estimated SoC after drive = {soc_after_drive:.2f}%")
         print(f"\n=== CHOSEN STATION ===")
         print(f"Station {chosen_id} with total estimated time {chosen_wait:.2f} min.\n")
 
