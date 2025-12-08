@@ -1,12 +1,37 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING, Callable, List, Tuple
+
+if TYPE_CHECKING:
+    from car import Car
+
 import heapq
 
 from event import EventType
-from constants import BATTERY_CAPACITY, FAST_CHARGER_POWER_KW, SLOW_CHARGER_POWER_KW, ASSUMED_SOC_FINAL
-
+from constants import (
+    BATTERY_CAPACITY,
+    FAST_CHARGER_POWER_KW,
+    SLOW_CHARGER_POWER_KW
+)
 
 class Charging_Station:
-    def __init__(self, station_id, position, sim_time):
+    station_id: int
+    position: Tuple[float, float]
+    sim_time: Callable[[], float]
 
+    fast_charger_status: int
+    slow_charger_status: int
+
+    current_estimated_wait_time: float
+    queue: List["Car"]
+
+    mean_fast_service: float
+    mean_slow_service: float
+
+    arrival_event: EventType
+    depart_fast_event: EventType
+    depart_slow_event: EventType
+
+    def __init__(self, station_id: int, position: Tuple[float, float], sim_time: Callable[[], float]):
         self.station_id = station_id
         self.position = position
         self.sim_time = sim_time   # lambda returning current sim time
@@ -16,7 +41,7 @@ class Charging_Station:
 
         self.current_estimated_wait_time = 0.0 # in minutes
 
-        self.queue = []   # Store Cars
+        self.queue = []   # Store Cars that are waiting to charge
 
         self.mean_fast_service = 0.5
         self.mean_slow_service = 1.0
@@ -41,7 +66,7 @@ class Charging_Station:
         }[station_id]
 
     # car is passed in from system ( so lowest time in event queue)
-    def arrival(self, routing, event_queue):
+    def arrival(self, routing, event_queue: list[tuple[float, EventType, "Car"]]):
         print("\n=== arrival() ===")
         idx = routing.routed_station.get_station_id() - 1
         routing.void_counter[idx] -= 1 if routing.void_counter[idx] > 0 else None

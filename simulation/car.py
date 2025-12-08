@@ -8,12 +8,14 @@ from constants import ENERGY_CONSUMPTION_RATE, BATTERY_CAPACITY, MIN_BATTERY_THR
 class Car:
     position: tuple[float, float] # (x,y) coordinate
     battery_level_initial: float # initial battery level (%)
+    soc_after_drive: float | None # estimated SoC (%) after driving to routed station
     system_arrival_time: float  # time car was spawned in the system
     reachable_stations: list[Station_Meta] # list of reachable station meta objects
     time_charging: float | None # time spent charging (minutes)
     target_charge_level: float # target charge level (%)
     routed_drive_time: float | None # drive time to routed station (minutes)
-    routed_arrival_time: float # arrival time at station
+    routed_arrival_time_queue: float # arrival time at station queue
+    time_in_queue: float # time spent in queue (minutes)
     total_time_in_system: float | None # total time in system (minutes)
 
     def __init__(self, system_arrival_time: float, stations: Iterable[Charging_Station]):
