@@ -54,7 +54,7 @@ class Routing:
                 f"drive_time={closest.drive_time_minutes:.2f} min | "
                 f"current queue={closest.get_effective_queue_length(void_counter=self.void_counter)}")
             # if the queue length at the closest station is acceptable or the car is low on battery choose it
-            if verify := self._verify_station_(closest, closest.soc_after_drive, void_counter=self.void_counter) != -1: # if we are allowed to route to the station
+            if (verify := self._verify_station_(closest, closest.soc_after_drive, void_counter=self.void_counter)) != -1: # if we are allowed to route to the station
                 # Apply routing decision cleanly
                 self._apply_routing_decision(closest, void_counter=self.void_counter)
                 print(f"  Chose station {closest.get_station_id()} for routing.")
