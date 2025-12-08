@@ -49,7 +49,6 @@ class Charging_Station:
         # if both chargers busy - join queue
         if self.fast_charger_status == 1 and self.slow_charger_status == 1:
             print(f"Both chargers busy at station {self.station_id}. Car joining queue.")
-            car.routed_arrival_time_queue = self.sim_time() # update the car's arrival time at the station queue if it has to wait
             self.queue.append(car)
             return
 
@@ -99,7 +98,7 @@ class Charging_Station:
         # take next car from queue
         next_car = self.queue.pop(0)
         self.fast_charger_status = 1
-        next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time_queue  # set the car's time in queue
+        next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time  # set the car's time in queue
 
         # compute service time and schedule departure
         service_time = self.compute_charge_time(next_car.target_charge_level, next_car.battery_level_initial, FAST_CHARGER_POWER_KW)
@@ -118,7 +117,7 @@ class Charging_Station:
 
         next_car = self.queue.pop(0)
         self.slow_charger_status = 1
-        next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time_queue
+        next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time
 
         # compute service time and schedule departure
         service_time = self.compute_charge_time(next_car.target_charge_level, next_car.battery_level_initial, SLOW_CHARGER_POWER_KW)

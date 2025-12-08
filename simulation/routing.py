@@ -47,7 +47,7 @@ class Routing:
                 # Apply routing decision cleanly
                 self._apply_routing_decision(closest, void_counter=self.void_counter)
                 print(f"  Chose station {closest.get_station_id()} for routing.")
-                print(f"  Arrival at station queue {self.car.routed_arrival_time_queue} for routing.")
+                print(f"  Arrival at station queue {self.car.routed_arrival_time} for routing.")
                 return closest
             else:
                 print(f"  Station {closest.get_station_id()} rejected due to long queue.")
@@ -119,4 +119,5 @@ class Routing:
         """
         void_counter[chosen.get_station_id() - 1] += 1 # increment the void counter for the chosen station indicating a car is somewhere in the simultion
         self.car.routed_station = chosen # update routed station with station_meta object
+        self.car.routed_arrival_time = self.car.system_arrival_time + chosen.drive_time_minutes
         self.car.routed_drive_time = chosen.drive_time_minutes 

@@ -91,7 +91,7 @@ class EV_Charging_System:
         ][station_choice_id - 1]
 
         # Schedule arrival to the station - this is the time it takes the car to drive there
-        heapq.heappush(self.event_queue, (car.routed_arrival_time_queue, station_event, routing))
+        heapq.heappush(self.event_queue, (car.routed_arrival_time, station_event, routing))
 
     def expon(self, mean): # generate exponential random variable
         """
@@ -182,5 +182,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 3)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 70)
     sim.main()
