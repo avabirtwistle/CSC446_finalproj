@@ -6,7 +6,6 @@ from routing_policies import RoutingPolicy
 def run_experiments():
 
     grouped_results = {}
-    
     num_runs = 5
     seeds = [100 + i * 2 for i in range(num_runs)] 
 
@@ -14,21 +13,16 @@ def run_experiments():
         RoutingPolicy.CLOSEST_STATION_FIRST,
         RoutingPolicy.SHORTEST_ESTIMATED_WAIT,
     ]
-    
 
     for seed in seeds:
-
         grouped_results[seed] = {"Seed": seed} 
-        
         for policy in policies:
             
             sim = EV_Charging_System(policy, num_delays_required=10000, seed=seed)
             sim.main()
             
             raw_result = sim.get_results()
-
             policy_name = raw_result["policy"]
-            
 
             if policy_name == "CLOSEST_STATION_FIRST":
                 prefix = "ClosestStation"
