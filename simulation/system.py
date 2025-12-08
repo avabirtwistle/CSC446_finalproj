@@ -16,6 +16,7 @@ class EV_Charging_System:
         self.total_wait_time = 0.0
         self.total_wait_time_queue = 0.0
         self.total_balking = 0
+        self.total_reneging = 0
         self.seed = seed
         np.random.seed(seed)
 
@@ -39,7 +40,6 @@ class EV_Charging_System:
         ]
 
     def timing(self):
-        print("\n=== TIMING() ===")
 
         if not self.event_queue:
             raise Exception("Event queue empty — simulation cannot continue.")
@@ -53,25 +53,15 @@ class EV_Charging_System:
         else:
             self.event_car = None
 
-        car_info = (
-            f"Car at station {self.event_car.routed_station.station.station_id}"
-            if self.event_car else
-            "No car"
-        )
-
-        print(f"Time: {self.sim_time:.3f} | "
-            f"Event: {self.next_event_type.name} | "
-            f"{car_info}")
-
     def arrival_system(self):
-        print("\n=== arrival_system() ===")
         # Schedule next system arrival
         next_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
         heapq.heappush(self.event_queue,
                     (next_arrival, EventType.ARRIVAL_SYSTEM, None))
 
-        # Create the car and routing object
+        # Create the car check if reneging and then routing
         car = Car(system_arrival_time=self.sim_time, stations=self.stations)
+        self.reneging()
         routing = Routing(car, self.routing_policy, void_counter=self.void_counter)
 
         # Actually perform routing and set routed_station
@@ -119,6 +109,20 @@ class EV_Charging_System:
         self.total_wait_time += (car.time_in_queue + car.routed_drive_time) # total wait time includes drive time
         self.num_cars_processed += 1
 
+    def reneging(self):
+        for station in self.stations:
+            queue = station.queue 
+
+            if len(queue) <= 5:
+                continue
+
+            sixth_car = queue[5]
+            time_waiting =  self.sim_time - sixth_car.routed_arrival_time 
+
+            # If the 6th car has waited too long, it reneges
+            if time_waiting > 15:  # minutes
+                queue.pop(5)
+                self.total_reneging += 1
 
     def print_results(self):
         """Prints the final simulation results."""
@@ -137,6 +141,8 @@ class EV_Charging_System:
         print("-" * 50)
         print(f"Average Time in System: {avg_time_in_system:.2f} minutes")
         print(f"Average Wait Time (incl. drive): {avg_wait_time:.2f} minutes")
+        print(f"Total Balking Events: {self.total_balking}")
+        print(f"Total Reneging Events: {self.total_reneging}")
         print("="*50)
 
     def get_results(self):
@@ -201,7 +207,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    # CLOSEST_STATION_FIRST = "closest_station_first"
-    # SHORTEST_ESTIMATED_WAIT
     sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10000, 2)
     sim.main()

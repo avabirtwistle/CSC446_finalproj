@@ -19,6 +19,3 @@ X_MAX = 13 # maximum x coordinate for simulation area
 Y_MIN = 0.0 # minimum y coordinate for simulation area
 Y_MAX = 7.5 # maximum y coordinate for simulation area
 SPEED_KM = 30 # average speed in km/h
-
-MAX_QUEUE_LENGTH = 20  # maximum acceptable queue length
-TIME_FACTOR = 30.0  # factor to multiply estimated wait times by for estimation
