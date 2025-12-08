@@ -8,7 +8,7 @@
 | `target_charge_level` | `float` | Car's chosen final battery %; the system does not know this value. |
 | `time_charging` | `float \| None` | Time the car spent charging. |
 | `routed_drive_time` | `float \| None` | Drive time to the station selected by the routing algorithm. |
-| `routed_arrival_time_queue` | `float` | Time the car arrives at the chosen station’s queue. |
+| `routed_arrival_time` | `float` | Time the car arrives at the chosen station. |
 | `total_time_in_system` | `float \| None` | Total time from system entry to completion of charging. |
 
 ###  _set_position(self)
