@@ -13,7 +13,7 @@ class Car:
     time_charging: float | None # time spent charging (minutes)
     target_charge_level: float # target charge level (%)
     routed_drive_time: float | None # drive time to routed station (minutes)
-    routed_arrival_time: float # arrival time at station queue
+    routed_arrival_time: float # arrival time at station
     total_time_in_system: float | None # total time in system (minutes)
 
     def __init__(self, system_arrival_time: float, stations: Iterable[Charging_Station]):
