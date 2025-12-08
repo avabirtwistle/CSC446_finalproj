@@ -14,6 +14,7 @@ class EV_Charging_System:
         self.total_time_in_system = 0.0
         self.total_wait_time = 0.0
         self.total_wait_time_queue = 0.0
+        self.total_balking = 0
 
         self.mean_interarrival_time = 10.0
         self.sim_time = 0.0
@@ -49,7 +50,6 @@ class EV_Charging_System:
         else:
             self.event_car = None
 
-        # print concise info
         car_info = (
             f"Car at station {self.event_car.routed_station.station.station_id}"
             if self.event_car else
@@ -73,10 +73,11 @@ class EV_Charging_System:
 
         # Actually perform routing and set routed_station
         chosen_station = routing.route()
-        routing.routed_station = chosen_station  # (if not set inside route())
+        routing.routed_station = chosen_station  # (if not set inside route()) follow up 
 
         if routing.routed_station is None:
             print("No station available for routing (car balks).")
+            self.total_balking += 1
             return
 
         print(f"Car {car.battery_level_initial} routed to station {routing.routed_station.station.station_id}")
@@ -112,7 +113,7 @@ class EV_Charging_System:
 
         # retrieve the wait time (drive + queue) for this car and add to total
         self.total_wait_time_queue += car.time_in_queue
-        self.total_wait_time += car.time_in_queue + car.routed_drive_time # total wait time includes drive time
+        self.total_wait_time += (car.time_in_queue + car.routed_drive_time) # total wait time includes drive time
         self.num_cars_processed += 1
 
 
@@ -181,5 +182,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10000)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10)
     sim.main()
