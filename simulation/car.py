@@ -8,6 +8,7 @@ from constants import ENERGY_CONSUMPTION_RATE, BATTERY_CAPACITY, MIN_BATTERY_THR
 class Car:
     position: tuple[float, float] # (x,y) coordinate
     battery_level_initial: float # initial battery level (%)
+    soc_after_drive: float | None # estimated SoC (%) after driving to routed station
     system_arrival_time: float  # time car was spawned in the system
     reachable_stations: list[Station_Meta] # list of reachable station meta objects
     time_charging: float | None # time spent charging (minutes)

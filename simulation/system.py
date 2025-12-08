@@ -29,9 +29,9 @@ class EV_Charging_System:
 
         # Stations
         self.stations = [
-            Charging_Station(1, [2.0, 3.0], lambda: self.sim_time),   # Downtown / central
-            Charging_Station(2, [7.5, 4.0], lambda: self.sim_time),   # Uptown / NE side
-            Charging_Station(3, [3.0, 0.8], lambda: self.sim_time),   # West / highway area
+            Charging_Station(1, [3.62, 2.93], lambda: self.sim_time),   # Belmont park area
+            Charging_Station(2, [9.29, 4.91], lambda: self.sim_time),   # Uptown / NE side
+            Charging_Station(3, [10.32, 1.74], lambda: self.sim_time),   # West / highway area
         ]
 
         self.counter_void = [
@@ -187,5 +187,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 150)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10)
     sim.main()

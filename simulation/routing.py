@@ -2,7 +2,7 @@ from car import MIN_BATTERY_THRESHOLD
 from station_meta import Station_Meta
 from routing_policies import RoutingPolicy
 from event import EventType
-from constants import MAX_QUEUE_LENGTH, TIME_FACTOR
+from constants import MAX_QUEUE_LENGTH, TIME_FACTOR, BALK_BATTERY_LEVEL
 
 class Routing:
     def __init__(self, car, routing_policy: RoutingPolicy, void_counter: list[int]):
@@ -41,7 +41,7 @@ class Routing:
         :rtype: Station_Meta | None
         """
         # get the list of reachable stations for this car
-        stations: list[Station_Meta] = list(self.car.reachable_stations)
+        stations: list[Station_Meta] = list(self.car.reachable_stations) 
         print("\n==================== NEW ROUTING DECISION ====================")
         print(f"Car Info:")
         print(f"  • Position: {self.car.position}")
@@ -55,14 +55,14 @@ class Routing:
                 f"drive_time={closest.drive_time_minutes:.2f} min | "
                 f"current queue={closest.get_effective_queue_length(void_counter=self.void_counter)}")
             # if the queue length at the closest station is acceptable or the car is low on battery choose it
-            if q_len <= MAX_QUEUE_LENGTH or self.car.battery_level_initial <= MIN_BATTERY_THRESHOLD:
+            if verify := self._verify_station_(closest, closest.soc_after_drive, void_counter=self.void_counter) != -1: # if we are allowed to route to the station
                 # Apply routing decision cleanly
                 self._apply_routing_decision(closest, void_counter=self.void_counter)
                 print(f"  Chose station {closest.get_station_id()} for routing.")
                 print(f"  Arrival at station queue {self.car.routed_arrival_time_queue} for routing.")
                 return closest
             else:
-                print(f"  Station {closest.get_station_id()} rejected due to long queue.")
+                print(f"  Station {closest.get_station_id()} rejected")
                 stations.remove(closest) # remove and check next closest
 
         return None # if we reach here no stations were suitable and None were chosen, car balks
@@ -77,17 +77,18 @@ class Routing:
         for station_meta in stations:
             st_id = station_meta.get_station_id()
             drive_time = station_meta.drive_time_minutes
+            soc_after_drive = station_meta.soc_after_drive
             print(f"\nChecking station {st_id}:")
             print(f"  • Drive time = {drive_time:.2f} min")
 
             # compute estimated queue wait
             wait_time_ahead = self._verify_station_(station_meta,
-                                                    self.car.battery_level_initial,
+                                                    station_meta.soc_after_drive,
                                                     void_counter=self.void_counter)
 
             if wait_time_ahead == -1:
-                print(f"  ✘ Station {st_id} rejected (verify returned -1)")
-                continue
+                print(f"  ✘ Station {st_id} rejected (verify returned -1)") # the station queue length is too long and the car has enough battery to
+                continue # look at remaining staions
 
             print(f"  • Estimated queue wait = {wait_time_ahead:.2f} min")
 
@@ -104,23 +105,22 @@ class Routing:
         chosen = min(wait_times, key=lambda s: wait_times[s])
         chosen_id = chosen.get_station_id()
         chosen_wait = wait_times[chosen]
-        soc_after_drive = self.car.get_estimated_soc_after_drive(chosen.station)
+        soc_after_drive = chosen.soc_after_drive
 
-        self.car.soc_initial = soc_after_drive[0]
-        print(f"  • Estimated SoC after drive = {soc_after_drive[0]:.2f}%")
+        print(f"  • Estimated SoC after drive = {soc_after_drive:.2f}%")
         print(f"\n=== CHOSEN STATION ===")
         print(f"Station {chosen_id} with total estimated time {chosen_wait:.2f} min.\n")
 
         self._apply_routing_decision(chosen, void_counter=self.void_counter)
         return chosen
 
-    def _verify_station_(self, station_meta: Station_Meta, battery_level, void_counter: list[int]) -> int:
+    def _verify_station_(self, station_meta: Station_Meta, soc_after_drive: float, void_counter: list[int]) -> int:
         """
         Helper for eliminating the stations that have too long of a queue from consideration 
         Returns the queue length >=0 if valid, returns -1 if false
         """
         q_len = station_meta.get_effective_queue_length(void_counter=void_counter) # get the number of cars in the queue and on the way to the station
-        if q_len > MAX_QUEUE_LENGTH and battery_level > MIN_BATTERY_THRESHOLD:
+        if q_len > MAX_QUEUE_LENGTH and soc_after_drive > BALK_BATTERY_LEVEL: # if the queue length is too long and the car has enough battery to consider other stations
             return -1 # if we shouldn't consider this station return -1
         return q_len # if we can consider this stations return the queue length
 
