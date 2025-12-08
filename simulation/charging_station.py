@@ -64,6 +64,7 @@ class Charging_Station:
             depart_time = self.sim_time() + service_time
             print(f"Car's initial battery level: {car.battery_level_initial:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
             print(f"cheduling departure from fast charger at station {self.station_id} at time {depart_time:.3f}.")
+
             #schedule departure event
             heapq.heappush(event_queue,
                 (depart_time, self.depart_fast_event, car)) 
@@ -73,7 +74,6 @@ class Charging_Station:
         if self.slow_charger_status == 0:
             print(f"Slow charger free at station {self.station_id}. Car starting to charge.")
             self.slow_charger_status = 1
-            self.slow_car = car
 
             # compute service time and schedule departure
             service_time = self.compute_charge_time(car.target_charge_level, car.battery_level_initial, SLOW_CHARGER_POWER_KW)
@@ -81,7 +81,6 @@ class Charging_Station:
             depart_time = self.sim_time() + service_time # compute departure time
             print(f"Car's initial battery level: {car.battery_level_initial:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
             print(f"cheduling departure from slow charger at station {self.station_id} at time {depart_time:.3f}.")
-
 
             # Schedule thedeparture event
             heapq.heappush(event_queue,
@@ -143,7 +142,3 @@ class Charging_Station:
         soc_diff = (target_charge_level - battery_level_initial) / 100.0 # fraction of battery to charge
         time_in_minutes = ((soc_diff * BATTERY_CAPACITY) / charge_rate_kw) * 60.0 
         return time_in_minutes # return the service time in minutes
-
-
-    def expon(self, mean):
-        return -mean * np.log(np.random.uniform())
