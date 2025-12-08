@@ -136,4 +136,5 @@ class Routing:
         void_counter[chosen.get_station_id() - 1] += 1 # increment the void counter for the chosen station indicating a car is somewhere in the simultion
         self.car.routed_station = chosen # update routed station with station_meta object
         self.car.routed_arrival_time = self.car.system_arrival_time + chosen.drive_time_minutes
+        self.car.soc_after_drive = chosen.soc_after_drive
         self.car.routed_drive_time = chosen.drive_time_minutes 
