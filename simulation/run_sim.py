@@ -58,7 +58,7 @@ def run_experiments():
         writer.writeheader()
         writer.writerows(final_results_list)
 
-    print("\n CSV written: simulation_results_pivoted_descriptive.csv")
+    print("\n CSV written: simulation_results.csv")
 
 
 if __name__ == "__main__":

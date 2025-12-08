@@ -18,7 +18,7 @@ class EV_Charging_System:
         self.seed = seed
         np.random.seed(seed)
 
-        self.mean_interarrival_time = 10.0
+        self.mean_interarrival_time = 5
         self.sim_time = 0.0
         self.void_counter = [0, 0, 0]  # List to track cars on the way to each station
 

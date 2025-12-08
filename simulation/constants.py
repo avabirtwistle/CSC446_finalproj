@@ -3,7 +3,7 @@ FAST_CHARGER_POWER_KW = 200   # BC Hydro Fast Charger ~ 200 kW Level 3
 
 ASSUMED_SOC_INITIAL = 20.0  # percent
 ASSUMED_SOC_FINAL = 80.0    # percent
-MAX_QUEUE_LENGTH = 5  # maximum acceptable queue length
+MAX_QUEUE_LENGTH = 20  # maximum acceptable queue length
 
 # Constraints for the maximum and minimum battery levels for generated cars
 BATTERY_MIN = 30 # 30% OST study recommended this assumption for the equation used for service time
