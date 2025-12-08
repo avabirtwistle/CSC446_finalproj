@@ -163,6 +163,6 @@ class Charging_Station:
             Returns:       
             float: Estimated charge time in minutes
         """
-        soc_diff = (target_charge_level - battery_level_initial) / 100.0 # fraction of battery to charge
+        soc_diff = (target_charge_level - soc_after_drive) / 100.0 # fraction of battery to charge
         time_in_minutes = ((soc_diff * BATTERY_CAPACITY) / charge_rate_kw) * 60.0 
         return time_in_minutes # return the service time in minutes
