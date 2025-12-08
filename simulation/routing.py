@@ -100,7 +100,7 @@ class Routing:
 
             # for now not including drive time 
 
-            wait_times[station_meta] = wait_time_ahead
+            wait_times[station_meta] = total_est
 
         if not wait_times:
             print("\nNo valid stations. Car will balk.\n")

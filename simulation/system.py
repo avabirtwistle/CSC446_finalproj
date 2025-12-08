@@ -203,5 +203,5 @@ class EV_Charging_System:
 if __name__ == "__main__":
     # CLOSEST_STATION_FIRST = "closest_station_first"
     # SHORTEST_ESTIMATED_WAIT
-    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 1000, 2)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10000, 2)
     sim.main()
