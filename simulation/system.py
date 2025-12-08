@@ -1,5 +1,6 @@
 import heapq
 import numpy as np
+
 from routing_policies import RoutingPolicy
 from event import EventType
 from charging_station import Charging_Station
@@ -8,7 +9,7 @@ from routing import Routing
 
 class EV_Charging_System:
     def __init__(self, routing_policy, num_delays_required, seed):
-        self.routing_policy = routing_policy # The routing policy being used
+        self.routing_policy = routing_policy
         self.num_delays_required = num_delays_required
         self.num_cars_processed = 0 
         self.total_time_in_system = 0.0
@@ -18,7 +19,7 @@ class EV_Charging_System:
         self.seed = seed
         np.random.seed(seed)
 
-        self.mean_interarrival_time = 5
+        self.mean_interarrival_time = 10
         self.sim_time = 0.0
         self.void_counter = [0, 0, 0]  # List to track cars on the way to each station
 
@@ -202,5 +203,5 @@ class EV_Charging_System:
 if __name__ == "__main__":
     # CLOSEST_STATION_FIRST = "closest_station_first"
     # SHORTEST_ESTIMATED_WAIT
-    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 1000, 10)
+    sim = EV_Charging_System(RoutingPolicy.SHORTEST_ESTIMATED_WAIT, 1000, 2)
     sim.main()

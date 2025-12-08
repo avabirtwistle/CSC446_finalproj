@@ -1,10 +1,8 @@
 from car import MIN_BATTERY_THRESHOLD
 from station_meta import Station_Meta
 from routing_policies import RoutingPolicy
-from constants import MAX_QUEUE_LENGTH, MIN_BATTERY_THRESHOLD
+from constants import MAX_QUEUE_LENGTH, MIN_BATTERY_THRESHOLD, TIME_FACTOR
 
-
-TIME_FACTOR = 30.0  # factor to multiply estimated wait times by for estimation
 class Routing:
     def __init__(self, car, routing_policy: RoutingPolicy, void_counter: list[int]):
         self.car = car # the car being routed
@@ -43,7 +41,7 @@ class Routing:
                 f"drive_time={closest.drive_time_minutes:.2f} min | "
                 f"current queue={closest.get_effective_queue_length(void_counter=self.void_counter)}")
             # if the queue length at the closest station is acceptable or the car is low on battery choose it
-            if q_len <= MAX_QUEUE_LENGTH or self.car.battery_level_initial >= MIN_BATTERY_THRESHOLD: #TODO double check with ava also is thsi redundant because we already filter reachable stations !!!!!
+            if q_len <= MAX_QUEUE_LENGTH and self.car.battery_level_initial >= MIN_BATTERY_THRESHOLD: #TODO double check with ava also is thsi redundant because we already filter reachable stations !!!!!Also AND
                 # Apply routing decision cleanly
                 self._apply_routing_decision(closest, void_counter=self.void_counter)
                 print(f"  Chose station {closest.get_station_id()} for routing.")
@@ -74,16 +72,21 @@ class Routing:
                                                     self.car.battery_level_initial,
                                                     void_counter=self.void_counter)
 
-            if wait_time_ahead == -1:
+            wait_time_ahead = wait_time_ahead * TIME_FACTOR
+
+            if wait_time_ahead < 0:
                 print(f"  ✘ Station {st_id} rejected (verify returned -1)")
                 continue
 
+            
             print(f"  • Estimated queue wait = {wait_time_ahead:.2f} min")
 
             total_est = wait_time_ahead + drive_time
             print(f"  → Total estimated time = {total_est:.2f} min")
 
-            wait_times[station_meta] = total_est
+            # for now not including drive time 
+
+            wait_times[station_meta] = wait_time_ahead
 
         if not wait_times:
             print("\nNo valid stations. Car will balk.\n")

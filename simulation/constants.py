@@ -1,4 +1,4 @@
-SLOW_CHARGER_POWER_KW = 4.8 # BC Hydro Level 2 ~ 4.8 kW
+SLOW_CHARGER_POWER_KW = 4.8   # BC Hydro Level 2 ~ 4.8 kW
 FAST_CHARGER_POWER_KW = 200   # BC Hydro Fast Charger ~ 200 kW Level 3
 
 ASSUMED_SOC_INITIAL = 20.0  # percent
@@ -13,6 +13,7 @@ ENERGY_CONSUMPTION_RATE: float= 0.20# (kWh/km)
 BATTERY_CAPACITY: float = 75.0 # (kWh)
 MIN_BATTERY_THRESHOLD = 20 # minimum battery level to consider driving to a station (%)
 MIN_CHARGE_AMOUNT = 20  # minimum amount to charge (%)
+TIME_FACTOR = 15.0  # factor to estimate wait times in queue
 
 X_MIN = 0.0 # minimum x coordinate for simulation area
 X_MAX = 9.3 # maximum x coordinate for simulation area

@@ -1,4 +1,5 @@
 import csv
+
 from system import EV_Charging_System
 from routing_policies import RoutingPolicy
 
@@ -18,7 +19,7 @@ def run_experiments():
         grouped_results[seed] = {"Seed": seed} 
         for policy in policies:
             
-            sim = EV_Charging_System(policy, num_delays_required=10000, seed=seed)
+            sim = EV_Charging_System(policy, num_delays_required=1000, seed=seed)
             sim.main()
             
             raw_result = sim.get_results()

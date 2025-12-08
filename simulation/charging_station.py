@@ -1,5 +1,5 @@
 import heapq
-import numpy as np
+
 from event import EventType
 from constants import BATTERY_CAPACITY, FAST_CHARGER_POWER_KW, SLOW_CHARGER_POWER_KW, ASSUMED_SOC_FINAL
 
