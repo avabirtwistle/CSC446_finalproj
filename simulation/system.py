@@ -38,7 +38,7 @@ class EV_Charging_System:
         ]
 
     def timing(self):
-        print("\n=== TIMING() ===")
+        # print("\n=== TIMING() ===")
 
         if not self.event_queue:
             raise Exception("Event queue empty — simulation cannot continue.")
@@ -52,18 +52,18 @@ class EV_Charging_System:
         else:
             self.event_car = None
 
-        car_info = (
-            f"Car at station {self.event_car.routed_station.station.station_id}"
-            if self.event_car else
-            "No car"
-        )
+        # car_info = (
+        #     f"Car at station {self.event_car.routed_station.station.station_id}"
+        #     if self.event_car else
+        #     "No car"
+        # )
 
-        print(f"Time: {self.sim_time:.3f} | "
-            f"Event: {self.next_event_type.name} | "
-            f"{car_info}")
+        # print(f"Time: {self.sim_time:.3f} | "
+        #     f"Event: {self.next_event_type.name} | "
+        #     f"{car_info}")
 
     def arrival_system(self):
-        print("\n=== arrival_system() ===")
+        # print("\n=== arrival_system() ===")
         # Schedule next system arrival
         next_arrival = self.sim_time + self.expon(self.mean_interarrival_time)
         heapq.heappush(self.event_queue,
@@ -82,7 +82,7 @@ class EV_Charging_System:
             self.total_balking += 1
             return
 
-        print(f"Car {car.battery_level_initial} routed to station {routing.routed_station.station.station_id}")
+        # print(f"Car {car.battery_level_initial} routed to station {routing.routed_station.station.station_id}")
         station_choice_id = routing.routed_station.station.station_id
 
         # Select the correct arrival event type based on the id we retrieved from station choice
