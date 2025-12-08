@@ -1,23 +1,19 @@
 from car import MIN_BATTERY_THRESHOLD
 from station_meta import Station_Meta
 from routing_policies import RoutingPolicy
-from event import EventType
+from constants import MAX_QUEUE_LENGTH, MIN_BATTERY_THRESHOLD, TIME_FACTOR
 
-import heapq
-MAX_QUEUE_LENGTH = 20  # maximum acceptable queue length
-TIME_FACTOR = 30.0  # factor to multiply estimated wait times by for estimation
 class Routing:
     def __init__(self, car, routing_policy: RoutingPolicy, void_counter: list[int]):
         self.car = car # the car being routed
-        self.routing_policy = routing_policy # the routing policy to use, this is an ENUM and chosed in system.py
+        self.routing_policy = routing_policy # the routing policy to use, this is an ENUM and chosen in system.py
         self.routed_station = None
-        # store the void counter for use in routing decisions
-        self.void_counter = void_counter
+        self.void_counter = void_counter # store the void counter for use in routing decisions
+
         # mapping of policies to functions, function names are defined in ENUM, the car will routing will call the correct function based on the policy chosen
         self._policy_map = {
             RoutingPolicy.CLOSEST_STATION_FIRST: self._closest_station_first,
             RoutingPolicy.SHORTEST_ESTIMATED_WAIT: self._shortest_estimated_wait
-            # add more policies here as needed
         }
 
     def route(self) -> Station_Meta | None:
@@ -45,17 +41,18 @@ class Routing:
                 f"drive_time={closest.drive_time_minutes:.2f} min | "
                 f"current queue={closest.get_effective_queue_length(void_counter=self.void_counter)}")
             # if the queue length at the closest station is acceptable or the car is low on battery choose it
-            if q_len <= MAX_QUEUE_LENGTH or self.car.battery_level_initial <= MIN_BATTERY_THRESHOLD:
+            if q_len <= MAX_QUEUE_LENGTH and self.car.battery_level_initial >= MIN_BATTERY_THRESHOLD: #TODO double check with ava also is thsi redundant because we already filter reachable stations !!!!!Also AND
                 # Apply routing decision cleanly
                 self._apply_routing_decision(closest, void_counter=self.void_counter)
                 print(f"  Chose station {closest.get_station_id()} for routing.")
-                print(f"  Arrival at station queue {self.car.routed_arrival_time_queue} for routing.")
+                print(f"  Arrival at station queue {self.car.routed_arrival_time} for routing.")
                 return closest
             else:
                 print(f"  Station {closest.get_station_id()} rejected due to long queue.")
                 stations.remove(closest) # remove and check next closest
 
         return None # if we reach here no stations were suitable and None were chosen, car balks
+    
     def _shortest_estimated_wait(self) -> Station_Meta | None:
         print("\n=== SHORTEST ESTIMATED WAIT () ===")
         print(f"Car battery: {self.car.battery_level_initial:.2f}%")
@@ -66,7 +63,7 @@ class Routing:
 
         for station_meta in stations:
             st_id = station_meta.get_station_id()
-            drive_time = station_meta.drive_time_minutes
+            drive_time = station_meta.get_drive_time_minutes()
             print(f"\nChecking station {st_id}:")
             print(f"  • Drive time = {drive_time:.2f} min")
 
@@ -75,16 +72,21 @@ class Routing:
                                                     self.car.battery_level_initial,
                                                     void_counter=self.void_counter)
 
-            if wait_time_ahead == -1:
+            wait_time_ahead = wait_time_ahead * TIME_FACTOR
+
+            if wait_time_ahead < 0:
                 print(f"  ✘ Station {st_id} rejected (verify returned -1)")
                 continue
 
+            
             print(f"  • Estimated queue wait = {wait_time_ahead:.2f} min")
 
             total_est = wait_time_ahead + drive_time
             print(f"  → Total estimated time = {total_est:.2f} min")
 
-            wait_times[station_meta] = total_est
+            # for now not including drive time 
+
+            wait_times[station_meta] = wait_time_ahead
 
         if not wait_times:
             print("\nNo valid stations. Car will balk.\n")
@@ -94,10 +96,10 @@ class Routing:
         chosen = min(wait_times, key=lambda s: wait_times[s])
         chosen_id = chosen.get_station_id()
         chosen_wait = wait_times[chosen]
-        soc_after_drive = self.car.get_estimated_soc_after_drive(chosen.station)
+        soc_after_drive = self.car.get_estimated_soc_after_driving_km(chosen.distance_km)
 
-        self.car.soc_initial = soc_after_drive[0]
-        print(f"  • Estimated SoC after drive = {soc_after_drive[0]:.2f}%")
+        self.car.soc_initial = soc_after_drive
+        print(f"  • Estimated SoC after drive = {soc_after_drive:.2f}%")
         print(f"\n=== CHOSEN STATION ===")
         print(f"Station {chosen_id} with total estimated time {chosen_wait:.2f} min.\n")
 
@@ -120,6 +122,5 @@ class Routing:
         """
         void_counter[chosen.get_station_id() - 1] += 1 # increment the void counter for the chosen station indicating a car is somewhere in the simultion
         self.car.routed_station = chosen # update routed station with station_meta object
-        self.car.routed_arrival_time_queue = self.car.system_arrival_time + chosen.drive_time_minutes  # set arrival time at station including drive time
-        
+        self.car.routed_arrival_time = self.car.system_arrival_time + chosen.drive_time_minutes
         self.car.routed_drive_time = chosen.drive_time_minutes 
