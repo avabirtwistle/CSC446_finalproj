@@ -2,10 +2,8 @@ from car import MIN_BATTERY_THRESHOLD
 from station_meta import Station_Meta
 from routing_policies import RoutingPolicy
 from event import EventType
+from constants import MAX_QUEUE_LENGTH, TIME_FACTOR
 
-import heapq
-MAX_QUEUE_LENGTH = 20  # maximum acceptable queue length
-TIME_FACTOR = 30.0  # factor to multiply estimated wait times by for estimation
 class Routing:
     def __init__(self, car, routing_policy: RoutingPolicy, void_counter: list[int]):
         self.car = car # the car being routed
