@@ -7,15 +7,14 @@ from constants import MAX_QUEUE_LENGTH, TIME_FACTOR, BALK_BATTERY_LEVEL
 class Routing:
     def __init__(self, car, routing_policy: RoutingPolicy, void_counter: list[int]):
         self.car = car # the car being routed
-        self.routing_policy = routing_policy # the routing policy to use, this is an ENUM and chosed in system.py
+        self.routing_policy = routing_policy # the routing policy to use, this is an ENUM and chosen in system.py
         self.routed_station = None
-        # store the void counter for use in routing decisions
-        self.void_counter = void_counter
+        self.void_counter = void_counter # store the void counter for use in routing decisions
+
         # mapping of policies to functions, function names are defined in ENUM, the car will routing will call the correct function based on the policy chosen
         self._policy_map = {
             RoutingPolicy.CLOSEST_STATION_FIRST: self._closest_station_first,
             RoutingPolicy.SHORTEST_ESTIMATED_WAIT: self._shortest_estimated_wait
-            # add more policies here as needed
         }
 
     def route(self) -> Station_Meta | None:
@@ -59,13 +58,14 @@ class Routing:
                 # Apply routing decision cleanly
                 self._apply_routing_decision(closest, void_counter=self.void_counter)
                 print(f"  Chose station {closest.get_station_id()} for routing.")
-                print(f"  Arrival at station queue {self.car.routed_arrival_time_queue} for routing.")
+                print(f"  Arrival at station queue {self.car.routed_arrival_time} for routing.")
                 return closest
             else:
                 print(f"  Station {closest.get_station_id()} rejected")
                 stations.remove(closest) # remove and check next closest
 
         return None # if we reach here no stations were suitable and None were chosen, car balks
+    
     def _shortest_estimated_wait(self) -> Station_Meta | None:
         print("\n=== SHORTEST ESTIMATED WAIT () ===")
         print(f"Car battery: {self.car.battery_level_initial:.2f}%")
@@ -86,16 +86,21 @@ class Routing:
                                                     station_meta.soc_after_drive,
                                                     void_counter=self.void_counter)
 
-            if wait_time_ahead == -1:
-                print(f"  ✘ Station {st_id} rejected (verify returned -1)") # the station queue length is too long and the car has enough battery to
-                continue # look at remaining staions
+            wait_time_ahead = wait_time_ahead * TIME_FACTOR
 
+            if wait_time_ahead < 0:
+                print(f"  ✘ Station {st_id} rejected (verify returned -1)")
+                continue
+
+            
             print(f"  • Estimated queue wait = {wait_time_ahead:.2f} min")
 
             total_est = wait_time_ahead + drive_time
             print(f"  → Total estimated time = {total_est:.2f} min")
 
-            wait_times[station_meta] = total_est
+            # for now not including drive time 
+
+            wait_times[station_meta] = wait_time_ahead
 
         if not wait_times:
             print("\nNo valid stations. Car will balk.\n")
@@ -130,6 +135,5 @@ class Routing:
         """
         void_counter[chosen.get_station_id() - 1] += 1 # increment the void counter for the chosen station indicating a car is somewhere in the simultion
         self.car.routed_station = chosen # update routed station with station_meta object
-        self.car.routed_arrival_time_queue = self.car.system_arrival_time + chosen.drive_time_minutes  # set arrival time at station including drive time
-        
+        self.car.routed_arrival_time = self.car.system_arrival_time + chosen.drive_time_minutes
         self.car.routed_drive_time = chosen.drive_time_minutes 

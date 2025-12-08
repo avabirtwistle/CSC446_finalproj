@@ -27,7 +27,7 @@ class Car:
 
         # Updated once car is routed
         self.routed_drive_time = None
-        self.routed_arrival_time_queue = 0.0
+        self.routed_arrival_time = 0.0
         self.time_charging = None
         self.total_time_in_system = None
         self.time_in_queue = 0.0
