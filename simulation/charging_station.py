@@ -83,10 +83,10 @@ class Charging_Station:
             self.fast_charger_status = 1
 
             # compute service time and schedule departure
-            service_time = self.compute_charge_time(car.target_charge_level, car.battery_level_initial, FAST_CHARGER_POWER_KW)          
+            service_time = self.compute_charge_time(car.target_charge_level, car.soc_after_drive, FAST_CHARGER_POWER_KW)          
             car.time_charging = service_time
             depart_time = self.sim_time() + service_time
-            print(f"Car's initial battery level: {car.battery_level_initial:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
+            print(f"Car's initial battery level: {car.soc_after_drive:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
             print(f"cheduling departure from fast charger at station {self.station_id} at time {depart_time:.3f}.")
 
             #schedule departure event
@@ -100,10 +100,10 @@ class Charging_Station:
             self.slow_charger_status = 1
 
             # compute service time and schedule departure
-            service_time = self.compute_charge_time(car.target_charge_level, car.battery_level_initial, SLOW_CHARGER_POWER_KW)
+            service_time = self.compute_charge_time(car.target_charge_level, car.soc_after_drive, SLOW_CHARGER_POWER_KW)
             car.time_charging = service_time # set the car's service time
             depart_time = self.sim_time() + service_time # compute departure time
-            print(f"Car's initial battery level: {car.battery_level_initial:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
+            print(f"Car's initial battery level: {car.soc_after_drive:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
             print(f"cheduling departure from slow charger at station {self.station_id} at time {depart_time:.3f}.")
 
             # Schedule thedeparture event
@@ -126,7 +126,7 @@ class Charging_Station:
         next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time  # set the car's time in queue
 
         # compute service time and schedule departure
-        service_time = self.compute_charge_time(next_car.target_charge_level, next_car.battery_level_initial, FAST_CHARGER_POWER_KW)
+        service_time = self.compute_charge_time(next_car.target_charge_level, next_car.soc_after_drive, FAST_CHARGER_POWER_KW)
         next_car.time_charging = service_time  # set the car's service time
         depart_time = self.sim_time() + service_time
 
@@ -145,14 +145,14 @@ class Charging_Station:
         next_car.time_in_queue = self.sim_time() - next_car.routed_arrival_time
 
         # compute service time and schedule departure
-        service_time = self.compute_charge_time(next_car.target_charge_level, next_car.battery_level_initial, SLOW_CHARGER_POWER_KW)
+        service_time = self.compute_charge_time(next_car.target_charge_level, next_car.soc_after_drive, SLOW_CHARGER_POWER_KW)
         next_car.time_charging = service_time  # set the car's service time
         depart_time = self.sim_time() + service_time
 
         heapq.heappush(event_queue,
             (depart_time, self.depart_slow_event, next_car))
 
-    def compute_charge_time(self, target_charge_level, battery_level_initial, charge_rate_kw: float) -> float:
+    def compute_charge_time(self, target_charge_level, soc_after_drive, charge_rate_kw: float) -> float:
         """
         Computes the estimated charge time (in hours) for the given car
         based on its target charge level. Affected by the service rate of the charger it gets assigned to.
