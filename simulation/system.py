@@ -143,22 +143,6 @@ class EV_Charging_System:
         print(f"Total Reneging Events: {self.total_reneging}")
         print("="*50)
 
-    def get_results(self):
-        if self.num_cars_processed > 0:
-            avg_time_in_system = self.total_time_in_system / self.num_cars_processed 
-            avg_wait_time = self.total_wait_time / self.num_cars_processed
-        else: 
-            avg_time_in_system = 0.0
-            avg_wait_time = 0.0 
-
-        return {"policy": self.routing_policy.name,
-                "seed": self.seed,
-                "cars_processed": self.num_cars_processed,
-                "avg_time_in_system": avg_time_in_system,
-                "avg_wait_time": avg_wait_time,
-                "total_balking": self.total_balking,
-                }
-
     def main(self):
         while self.num_cars_processed < self.num_delays_required:
             self.timing() # - to get the next event
