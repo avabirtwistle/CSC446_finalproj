@@ -19,6 +19,8 @@ class EV_Charging_System:
         self.total_reneging = 0
         self.seed = seed
         np.random.seed(seed)
+        self.wait_trace = []
+        self.time_trace = [] 
 
         self.mean_interarrival_time = 5
         self.sim_time = 0.0
@@ -101,6 +103,9 @@ class EV_Charging_System:
         :param car: The car that is departing.        
         """
         # retrieve the total time in system for this car and add to total
+        wait = car.time_in_queue + car.routed_drive_time
+        self.wait_trace.append(wait)
+        self.time_trace.append(self.sim_time)
         self.total_time_in_system += car.get_total_time_in_system(self.sim_time)
 
         # retrieve the wait time (drive + queue) for this car and add to total
@@ -116,7 +121,6 @@ class EV_Charging_System:
 
             sixth_car = queue[5]
             time_waiting =  self.sim_time - sixth_car.routed_arrival_time 
-            print(f'time waiting: {time_waiting}')
             # If the 6th car has waited too long, it reneges
             if time_waiting > 15:  # minutes
                 queue.pop(5)
@@ -141,6 +145,7 @@ class EV_Charging_System:
         print(f"Average Wait Time (incl. drive): {avg_wait_time:.2f} minutes")
         print(f"Total Balking Events: {self.total_balking}")
         print(f"Total Reneging Events: {self.total_reneging}")
+        print(F"Simulation end time: {self.sim_time:.2f} minutes")
         print("="*50)
 
     def main(self):
