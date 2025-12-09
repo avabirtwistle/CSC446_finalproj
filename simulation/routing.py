@@ -58,9 +58,7 @@ class Routing:
         wait_times = {}
 
         for station_meta in stations:
-            st_id = station_meta.get_station_id()
             drive_time = station_meta.drive_time_minutes
-            soc_after_drive = station_meta.soc_after_drive
 
             # compute estimated queue wait
             wait_time_ahead = self._verify_station_(station_meta,
@@ -77,7 +75,6 @@ class Routing:
             wait_times[station_meta] = total_est
 
         if not wait_times:
-            print("\nNo valid stations. Car will balk.\n")
             return None
 
         # pick minimum

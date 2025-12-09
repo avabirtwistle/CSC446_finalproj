@@ -20,7 +20,7 @@ class EV_Charging_System:
         self.seed = seed
         np.random.seed(seed)
 
-        self.mean_interarrival_time = 10
+        self.mean_interarrival_time = 5
         self.sim_time = 0.0
         self.void_counter = [0, 0, 0]  # List to track cars on the way to each station
 
@@ -61,7 +61,7 @@ class EV_Charging_System:
 
         # Create the car check if reneging and then routing
         car = Car(system_arrival_time=self.sim_time, stations=self.stations)
-        self.reneging()
+        #self.reneging()
         routing = Routing(car, self.routing_policy, void_counter=self.void_counter)
 
         # Actually perform routing and set routed_station
@@ -69,7 +69,6 @@ class EV_Charging_System:
         routing.routed_station = chosen_station  # (if not set inside route()) follow up 
 
         if routing.routed_station is None:
-            print("No station available for routing (car balks).")
             self.total_balking += 1
             return
 
@@ -118,9 +117,8 @@ class EV_Charging_System:
 
             sixth_car = queue[5]
             time_waiting =  self.sim_time - sixth_car.routed_arrival_time 
-
             # If the 6th car has waited too long, it reneges
-            if time_waiting > 15:  # minutes
+            if time_waiting > 10:  # minutes
                 queue.pop(5)
                 self.total_reneging += 1
 
@@ -207,5 +205,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 10000, 2)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 100000, 2)
     sim.main()
