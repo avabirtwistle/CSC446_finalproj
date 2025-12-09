@@ -61,7 +61,7 @@ class EV_Charging_System:
 
         # Create the car check if reneging and then routing
         car = Car(system_arrival_time=self.sim_time, stations=self.stations)
-        #self.reneging()
+        self.reneging()
         routing = Routing(car, self.routing_policy, void_counter=self.void_counter)
 
         # Actually perform routing and set routed_station
@@ -111,14 +111,14 @@ class EV_Charging_System:
     def reneging(self):
         for station in self.stations:
             queue = station.queue 
-
             if len(queue) <= 5:
                 continue
 
             sixth_car = queue[5]
             time_waiting =  self.sim_time - sixth_car.routed_arrival_time 
+            print(f'time waiting: {time_waiting}')
             # If the 6th car has waited too long, it reneges
-            if time_waiting > 10:  # minutes
+            if time_waiting > 15:  # minutes
                 queue.pop(5)
                 self.total_reneging += 1
 
@@ -205,5 +205,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 100000, 2)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 100000, 100)
     sim.main()

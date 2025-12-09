@@ -17,10 +17,10 @@ class Station_Meta:
         self.soc_after_drive = soc_after_drive # SoC (%) after the ev gets there
 
     def get_drive_time_minutes(self) -> float:
-        return self.drive_time_minutes # return the drive time in minutes
+        return self.drive_time_minutes  # return the drive time in minutes
 
     def get_station_id(self) -> int:
-        return self.station.station_id # return the station id
+        return self.station.station_id  # return the station id
     
     def get_effective_queue_length(self, void_counter) -> int:
         return len(self.station.queue) + void_counter[self.station.station_id - 1]  # return the current queue length at the station and the current length of void cars for the station

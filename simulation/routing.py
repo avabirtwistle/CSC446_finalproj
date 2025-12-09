@@ -70,7 +70,6 @@ class Routing:
             if wait_time_ahead < 0:
                 continue
 
-
             total_est = wait_time_ahead + drive_time
             wait_times[station_meta] = total_est
 
