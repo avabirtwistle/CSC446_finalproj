@@ -14,7 +14,7 @@ class Car:
     time_charging: float | None # time spent charging (minutes)
     target_charge_level: float # target charge level (%)
     routed_drive_time: float | None # drive time to routed station (minutes)
-    routed_arrival_time_queue: float # arrival time at station queue
+    routed_arrival_time: float # arrival time at station 
     time_in_queue: float # time spent in queue (minutes)
     total_time_in_system: float | None # total time in system (minutes)
 
@@ -69,7 +69,6 @@ class Car:
         Builds the list of reachable stations.
 
         For each station, compute distance, drive time, and SoC after drive. 
-        TODO handle case where no stations are reachable, raise exception? and should track these 
 
         Returns a list of Station_Meta objects only for stations the car can reach.
         """

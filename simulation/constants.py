@@ -1,7 +1,7 @@
 SLOW_CHARGER_POWER_KW = 4.8   # BC Hydro Level 2 ~ 4.8 kW
 FAST_CHARGER_POWER_KW = 200   # BC Hydro Fast Charger ~ 200 kW Level 3
 
-MAX_QUEUE_LENGTH = 20  # maximum acceptable queue length
+MAX_QUEUE_LENGTH = 10  # maximum acceptable queue length
 
 # Constraints for the maximum and minimum battery levels for generated cars
 BATTERY_MIN = 20 # 30% OST study recommended this assumption for the equation used for service time
@@ -19,6 +19,3 @@ X_MAX = 13 # maximum x coordinate for simulation area
 Y_MIN = 0.0 # minimum y coordinate for simulation area
 Y_MAX = 7.5 # maximum y coordinate for simulation area
 SPEED_KM = 30 # average speed in km/h
-
-MAX_QUEUE_LENGTH = 20  # maximum acceptable queue length
-TIME_FACTOR = 30.0  # factor to multiply estimated wait times by for estimation

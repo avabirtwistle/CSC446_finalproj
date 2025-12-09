@@ -67,27 +67,22 @@ class Charging_Station:
 
     # car is passed in from system ( so lowest time in event queue)
     def arrival(self, routing, event_queue: list[tuple[float, EventType, "Car"]]):
-        print("\n=== arrival() ===")
         idx = routing.routed_station.get_station_id() - 1
         routing.void_counter[idx] -= 1 if routing.void_counter[idx] > 0 else None
         car = routing.car
         # if both chargers busy - join queue
         if self.fast_charger_status == 1 and self.slow_charger_status == 1:
-            print(f"Both chargers busy at station {self.station_id}. Car joining queue.")
             self.queue.append(car)
             return
 
         # is the fast charger free?
         if self.fast_charger_status == 0:
-            print(f"Fast charger free at station {self.station_id}. Car starting to charge.")
             self.fast_charger_status = 1
 
             # compute service time and schedule departure
             service_time = self.compute_charge_time(car.target_charge_level, car.soc_after_drive, FAST_CHARGER_POWER_KW)          
             car.time_charging = service_time
             depart_time = self.sim_time() + service_time
-            print(f"Car's initial battery level: {car.soc_after_drive:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
-            print(f"cheduling departure from fast charger at station {self.station_id} at time {depart_time:.3f}.")
 
             #schedule departure event
             heapq.heappush(event_queue,
@@ -96,15 +91,12 @@ class Charging_Station:
 
         # is the slow charger free?
         if self.slow_charger_status == 0:
-            print(f"Slow charger free at station {self.station_id}. Car starting to charge.")
             self.slow_charger_status = 1
 
             # compute service time and schedule departure
             service_time = self.compute_charge_time(car.target_charge_level, car.soc_after_drive, SLOW_CHARGER_POWER_KW)
             car.time_charging = service_time # set the car's service time
             depart_time = self.sim_time() + service_time # compute departure time
-            print(f"Car's initial battery level: {car.soc_after_drive:.2f}%, target charge level: {car.target_charge_level:.2f}%. , service time: {service_time:.3f} minutes. ")
-            print(f"cheduling departure from slow charger at station {self.station_id} at time {depart_time:.3f}.")
 
             # Schedule thedeparture event
             heapq.heappush(event_queue,
