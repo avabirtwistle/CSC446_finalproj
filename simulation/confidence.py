@@ -3,7 +3,7 @@ import math
 import matplotlib.pyplot as plt
 from scipy.stats import t
 
-INPUT_FILE = "results.csv"
+INPUT_FILE = "simulation_results.csv"
 
 def load_results():
     seeds = []
@@ -42,7 +42,7 @@ def plot_differences(seeds, D, D_bar, H):
 
     plt.title("Paired Differences (CRN)")
     plt.xlabel("Seed")
-    plt.ylabel("Difference in Avg Wait (Policy1 − Policy2)")
+    plt.ylabel("Difference in Avg Wait (CSF − SEW)")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()

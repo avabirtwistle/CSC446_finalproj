@@ -19,8 +19,7 @@ class EV_Charging_System:
         self.total_reneging = 0
         self.seed = seed
         np.random.seed(seed)
-        self.wait_trace = []
-        self.time_trace = [] 
+        self.wait_times = []
 
         self.mean_interarrival_time = 5
         self.sim_time = 0.0
@@ -104,8 +103,7 @@ class EV_Charging_System:
         """
         # retrieve the total time in system for this car and add to total
         wait = car.time_in_queue + car.routed_drive_time
-        self.wait_trace.append(wait)
-        self.time_trace.append(self.sim_time)
+        self.wait_times.append(wait)
         self.total_time_in_system += car.get_total_time_in_system(self.sim_time)
 
         # retrieve the wait time (drive + queue) for this car and add to total
