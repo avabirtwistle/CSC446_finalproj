@@ -19,6 +19,7 @@ class EV_Charging_System:
         self.total_reneging = 0
         self.seed = seed
         np.random.seed(seed)
+        self.wait_times = []
 
         self.mean_interarrival_time = 5
         self.sim_time = 0.0
@@ -61,7 +62,7 @@ class EV_Charging_System:
 
         # Create the car check if reneging and then routing
         car = Car(system_arrival_time=self.sim_time, stations=self.stations)
-        #self.reneging()
+        self.reneging()
         routing = Routing(car, self.routing_policy, void_counter=self.void_counter)
 
         # Actually perform routing and set routed_station
@@ -101,6 +102,8 @@ class EV_Charging_System:
         :param car: The car that is departing.        
         """
         # retrieve the total time in system for this car and add to total
+        wait = car.time_in_queue + car.routed_drive_time
+        self.wait_times.append(wait)
         self.total_time_in_system += car.get_total_time_in_system(self.sim_time)
 
         # retrieve the wait time (drive + queue) for this car and add to total
@@ -111,14 +114,13 @@ class EV_Charging_System:
     def reneging(self):
         for station in self.stations:
             queue = station.queue 
-
             if len(queue) <= 5:
                 continue
 
             sixth_car = queue[5]
             time_waiting =  self.sim_time - sixth_car.routed_arrival_time 
             # If the 6th car has waited too long, it reneges
-            if time_waiting > 10:  # minutes
+            if time_waiting > 15:  # minutes
                 queue.pop(5)
                 self.total_reneging += 1
 
@@ -141,23 +143,8 @@ class EV_Charging_System:
         print(f"Average Wait Time (incl. drive): {avg_wait_time:.2f} minutes")
         print(f"Total Balking Events: {self.total_balking}")
         print(f"Total Reneging Events: {self.total_reneging}")
+        print(F"Simulation end time: {self.sim_time:.2f} minutes")
         print("="*50)
-
-    def get_results(self):
-        if self.num_cars_processed > 0:
-            avg_time_in_system = self.total_time_in_system / self.num_cars_processed 
-            avg_wait_time = self.total_wait_time / self.num_cars_processed
-        else: 
-            avg_time_in_system = 0.0
-            avg_wait_time = 0.0 
-
-        return {"policy": self.routing_policy.name,
-                "seed": self.seed,
-                "cars_processed": self.num_cars_processed,
-                "avg_time_in_system": avg_time_in_system,
-                "avg_wait_time": avg_wait_time,
-                "total_balking": self.total_balking,
-                }
 
     def main(self):
         while self.num_cars_processed < self.num_delays_required:
@@ -205,5 +192,5 @@ class EV_Charging_System:
         self.print_results()
 
 if __name__ == "__main__":
-    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 100000, 2)
+    sim = EV_Charging_System(RoutingPolicy.CLOSEST_STATION_FIRST, 100000, 100)
     sim.main()

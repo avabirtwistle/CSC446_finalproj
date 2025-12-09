@@ -1,60 +1,40 @@
 import csv
-
 from system import EV_Charging_System
 from routing_policies import RoutingPolicy
 
+SEEDS = [3, 200, 303, 670, 1000]
+POLICIES = [
+    RoutingPolicy.CLOSEST_STATION_FIRST,
+    RoutingPolicy.SHORTEST_ESTIMATED_WAIT,
+]
+NUM_DELAYS_REQUIRED = 100000
+OUTPUT_FILE = "simulation_results.csv"
 
-def run_experiments():
+def run_replications():
 
-    grouped_results = {}
-    num_runs = 5
-    seeds = [100 + i * 2 for i in range(num_runs)] 
+    table = [{"seed": seed} for seed in SEEDS]
 
-    policies = [
-        RoutingPolicy.CLOSEST_STATION_FIRST,
-        RoutingPolicy.SHORTEST_ESTIMATED_WAIT,
-    ]
+    for policy in POLICIES:
+        pol_name = policy.name.lower()
 
-    for seed in seeds:
-        grouped_results[seed] = {"Seed": seed} 
-        for policy in policies:
-            
-            sim = EV_Charging_System(policy, num_delays_required=1000, seed=seed)
+        for i, seed in enumerate(SEEDS):
+            sim = EV_Charging_System(
+                policy,
+                num_delays_required=NUM_DELAYS_REQUIRED,
+                seed=seed
+            )
             sim.main()
-            
-            raw_result = sim.get_results()
-            policy_name = raw_result["policy"]
 
-            if policy_name == "CLOSEST_STATION_FIRST":
-                prefix = "ClosestStation"
-            elif policy_name == "SHORTEST_ESTIMATED_WAIT":
-                prefix = "ShortestWait"
-            else:
-                prefix = policy_name
+            wait_times = sim.wait_times
+            avg_wait = sum(wait_times) / len(wait_times) if wait_times else 0
 
-            grouped_results[seed][f"{prefix}_AvgWaitTime_min"] = raw_result["avg_wait_time"]
-            grouped_results[seed][f"{prefix}_AvgTotalTime_min"] = raw_result["avg_time_in_system"]
-            grouped_results[seed][f"{prefix}_Balking_count"] = raw_result["total_balking"]
+            table[i][pol_name] = avg_wait
 
-    final_results_list = list(grouped_results.values())
-    
-    headers = [
-        "Seed", 
-        "ClosestStation_AvgWaitTime_min", 
-        "ClosestStation_AvgTotalTime_min",
-        "ClosestStation_Balking_count",
-        "ShortestWait_AvgWaitTime_min",
-        "ShortestWait_AvgTotalTime_min",
-        "ShortestWait_Balking_count",
-    ]
-    
-    with open("simulation_results.csv", "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
+    fieldnames = ["seed"] + [p.name.lower() for p in POLICIES]
+    with open(OUTPUT_FILE, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(final_results_list)
-
-    print("\n CSV written: simulation_results.csv")
-
+        writer.writerows(table)
 
 if __name__ == "__main__":
-    run_experiments()
+    run_replications()
